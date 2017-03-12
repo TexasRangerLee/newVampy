@@ -54,8 +54,10 @@ public class Vamp_Player_Controller : MonoBehaviour
                         {
                             interact.transform.gameObject.GetComponent<Rigidbody>().useGravity = false;
                             interact.transform.gameObject.GetComponent<Rigidbody>().isKinematic = true;
-                            interact.transform.position = new Vector3(this.transform.GetChild(0).transform.position.x, 
-                                this.transform.GetChild(0).transform.position.y, this.transform.GetChild(0).transform.transform.position.z + 5.0f);
+                            //interact.transform.position = new Vector3(this.transform.GetChild(0).transform.position.x, 
+                            //    this.transform.GetChild(0).transform.position.y, this.transform.GetChild(0).transform.transform.position.z + 5.0f);
+                            interact.transform.gameObject.transform.position = this.transform.TransformPoint(0,0,2.5f/*this.transform.GetChild(0).transform.position.x, 
+                                this.transform.GetChild(0).transform.position.y, this.transform.GetChild(0).transform.position.z + 2.5f*/);
                         }
                     }
                     interact.transform.gameObject.GetComponent<GlowObject>().enabled = true;
