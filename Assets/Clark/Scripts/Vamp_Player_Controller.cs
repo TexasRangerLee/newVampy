@@ -40,6 +40,21 @@ public class Vamp_Player_Controller : MonoBehaviour
         float forwardMovenemt = Input.GetAxis("Vertical");
         float straffing = Input.GetAxis("Horizontal");
 
+        RaycastHit interact;
+        if (Physics.Raycast(this.transform.position, this.transform.GetChild(0).transform.forward, out interact, 5.0f))
+        {
+            if (interact.transform.gameObject != null)
+            {
+                interact.transform.gameObject.GetComponent<GlowObject>().enabled = true;
+                if (Input.GetKeyUp(KeyCode.E))
+                {
+                    interact.transform.gameObject.GetComponent<DoorOpenCloseLerpScript>().MoveDoor();
+                }
+            }
+            interact.transform.gameObject.GetComponent<GlowObject>().enabled = false;
+        }
+
+
 
         if (Input.GetKey(KeyCode.LeftShift))
         {
