@@ -43,10 +43,21 @@ public class Vamp_Player_Controller : MonoBehaviour
         try
         {
             RaycastHit interact;
-            if (Physics.Raycast(this.transform.position, this.transform.GetChild(0).transform.forward, out interact, 5.0f))
+            Debug.DrawRay(this.gameObject.transform.GetChild(0).transform.position, this.gameObject.transform.GetChild(0).transform.forward * 2.5f);
+            if (Physics.Raycast(this.transform.position, this.transform.GetChild(0).transform.forward, out interact, 2.5f))
             {
                 if (interact.transform.gameObject != null)
                 {
+                    if (interact.transform.gameObject.tag == "Battery")
+                    {
+                        if (Input.GetKeyUp(KeyCode.E))
+                        {
+                            interact.transform.gameObject.GetComponent<Rigidbody>().useGravity = false;
+                            interact.transform.gameObject.GetComponent<Rigidbody>().isKinematic = true;
+                            interact.transform.position = new Vector3(this.transform.GetChild(0).transform.position.x, 
+                                this.transform.GetChild(0).transform.position.y, this.transform.GetChild(0).transform.transform.position.z + 5.0f);
+                        }
+                    }
                     interact.transform.gameObject.GetComponent<GlowObject>().enabled = true;
                     if (Input.GetKeyUp(KeyCode.E))
                     {
