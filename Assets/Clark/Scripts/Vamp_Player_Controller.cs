@@ -15,45 +15,78 @@ public class Vamp_Player_Controller : MonoBehaviour
 
     [SerializeField]
     bool grounded;
-    
+
     Rigidbody rb;
     Vector3 maxHeight;
     Vector3 groundedPosition;
     bool falling;
 
-	// Use this for initialization
-	void Start ()
+    // Use this for initialization
+    void Start()
     {
         currentState = States.Idle;
         rb = this.GetComponent<Rigidbody>();
         falling = false;
-	}
-	
-	// Update is called once per frame
-	void Update ()
+    }
+
+    // Update is called once per frame
+    void Update()
     {
-        
-	}
+
+    }
 
     void FixedUpdate()
     {
         float forwardMovenemt = Input.GetAxis("Vertical");
         float straffing = Input.GetAxis("Horizontal");
 
-        RaycastHit interact;
-        if (Physics.Raycast(this.transform.position, this.transform.GetChild(0).transform.forward, out interact, 5.0f))
+        try
         {
-            if (interact.transform.gameObject != null)
+            RaycastHit interact;
+            Debug.DrawRay(this.gameObject.transform.GetChild(0).transform.position, this.gameObject.transform.GetChild(0).transform.forward * 2.5f);
+            if (Physics.Raycast(this.transform.position, this.transform.GetChild(0).transform.forward, out interact, 2.5f))
             {
-                interact.transform.gameObject.GetComponent<GlowObject>().enabled = true;
-                if (Input.GetKeyUp(KeyCode.E))
+                if (interact.transform.gameObject != null)
                 {
-                    interact.transform.gameObject.GetComponent<DoorOpenCloseLerpScript>().MoveDoor();
-                }
-            }
-            interact.transform.gameObject.GetComponent<GlowObject>().enabled = false;
-        }
+                    if (interact.transform.gameObject.tag == "Battery")
+                    {
+                        if (Input.GetKeyUp(KeyCode.E))
+                        {
+                            if (interact.transform.gameObject.GetComponent<Rigidbody>().useGravity)
+                            {
+                                interact.transform.gameObject.GetComponent<Rigidbody>().useGravity = false;
+                                interact.transform.gameObject.GetComponent<Rigidbody>().isKinematic = true;
+                                //interact.transform.position = new Vector3(this.transform.GetChild(0).transform.position.x, 
+                                //    this.transform.GetChild(0).transform.position.y, this.transform.GetChild(0).transform.transform.position.z + 5.0f);
+                                //interact.transform.gameObject.transform.position = this.transform.TransformPoint(0,0,2.5f/*this.transform.GetChild(0).transform.position.x, 
+                                //    this.transform.GetChild(0).transform.position.y, this.transform.GetChild(0).transform.position.z + 2.5f*/);
+                                interact.transform.gameObject.transform.parent = this.transform;
+                                interact.transform.gameObject.transform.position = this.transform.TransformPoint(0, 0, 2.5f);
+                                interact.transform.gameObject.transform.rotation = Quaternion.EulerAngles(0, 90, 0);
+                            }
+                            else
+                            {
+                                interact.transform.gameObject.GetComponent<Rigidbody>().useGravity = true;
+                                interact.transform.gameObject.GetComponent<Rigidbody>().isKinematic = false;
+                                interact.transform.gameObject.transform.localScale.Set(1, 1, 1);
+                                interact.transform.gameObject.transform.parent = null;
+                            }
+                        }
+                    }
 
+                    interact.transform.gameObject.GetComponent<GlowObject>().enabled = true;
+                    if (Input.GetKeyUp(KeyCode.E))
+                    {
+                        interact.transform.gameObject.GetComponent<DoorOpenCloseLerpScript>().MoveDoor();
+                    }
+                }
+                interact.transform.gameObject.GetComponent<GlowObject>().enabled = false;
+            }
+        }
+        catch
+        {
+
+        }
 
 
         if (Input.GetKey(KeyCode.LeftShift))
@@ -64,7 +97,7 @@ public class Vamp_Player_Controller : MonoBehaviour
         switch (currentState)
         {
             case States.Idle:
-                {    
+                {
                     if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.D))
                     {
                         ChangeStates(States.Walking);
@@ -98,7 +131,7 @@ public class Vamp_Player_Controller : MonoBehaviour
                     {
                         straiffing = transform.right * straffing;
                     }
-                    
+
                     //else
                     //{
                     //    Vector3 walking = new Vector3(straffing, 0.0f, forwardMovenemt);
@@ -138,7 +171,7 @@ public class Vamp_Player_Controller : MonoBehaviour
 
                     running = forward + straiffing;
                     running = running.normalized * runningSpeed * Time.deltaTime;
-					rb.MovePosition (transform.position + running);
+                    rb.MovePosition(transform.position + running);
 
                     if (Input.GetKeyUp(KeyCode.LeftShift))
                     {
