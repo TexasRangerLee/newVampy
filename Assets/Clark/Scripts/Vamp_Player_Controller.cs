@@ -68,10 +68,12 @@ public class Vamp_Player_Controller : MonoBehaviour
                             {
                                 interact.transform.gameObject.GetComponent<Rigidbody>().useGravity = true;
                                 interact.transform.gameObject.GetComponent<Rigidbody>().isKinematic = false;
+                                interact.transform.gameObject.transform.localScale.Set(1, 1, 1);
                                 interact.transform.gameObject.transform.parent = null;
                             }
                         }
                     }
+
                     interact.transform.gameObject.GetComponent<GlowObject>().enabled = true;
                     if (Input.GetKeyUp(KeyCode.E))
                     {
