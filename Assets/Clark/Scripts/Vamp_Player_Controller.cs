@@ -16,6 +16,12 @@ public class Vamp_Player_Controller : MonoBehaviour
     [SerializeField]
     bool grounded;
 
+    [SerializeField]
+    bool holdingSomething = false;
+
+    [SerializeField]
+    bool canDropObject = false;
+
     Rigidbody rb;
     Vector3 maxHeight;
     Vector3 groundedPosition;
@@ -63,13 +69,9 @@ public class Vamp_Player_Controller : MonoBehaviour
                                 interact.transform.gameObject.transform.parent = this.transform;
                                 interact.transform.gameObject.transform.position = this.transform.TransformPoint(0, 0, 2.5f);
                                 interact.transform.gameObject.transform.rotation = Quaternion.EulerAngles(0, 90, 0);
-                            }
-                            else
-                            {
-                                interact.transform.gameObject.GetComponent<Rigidbody>().useGravity = true;
-                                interact.transform.gameObject.GetComponent<Rigidbody>().isKinematic = false;
-                                interact.transform.gameObject.transform.localScale.Set(1, 1, 1);
-                                interact.transform.gameObject.transform.parent = null;
+                                holdingSomething = true;
+                                canDropObject = false;
+                                StartCoroutine("CanDrop");
                             }
                         }
                     }
@@ -86,6 +88,22 @@ public class Vamp_Player_Controller : MonoBehaviour
         catch
         {
 
+        }
+
+        if (canDropObject)
+        {
+            if (Input.GetKeyUp(KeyCode.E))
+            {
+                if (holdingSomething)
+                {
+                    this.transform.GetChild(1).transform.gameObject.GetComponent<Rigidbody>().useGravity = true;
+                    this.transform.GetChild(1).transform.gameObject.GetComponent<Rigidbody>().isKinematic = false;
+                    this.transform.GetChild(1).transform.gameObject.transform.localScale.Set(1, 1, 1);
+                    this.transform.GetChild(1).transform.gameObject.transform.parent = null;
+                    holdingSomething = false;
+                    canDropObject = false;
+                }
+            }
         }
 
 
@@ -248,5 +266,11 @@ public class Vamp_Player_Controller : MonoBehaviour
     public void OnCollisionExit(Collision other)
     {
         grounded = false;
+    }
+
+    IEnumerable CanDrop()
+    {
+        canDropObject = true;
+        yield return new WaitForSeconds(1);
     }
 }
