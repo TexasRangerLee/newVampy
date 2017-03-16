@@ -265,7 +265,47 @@ public class Vamp_Player_Controller : MonoBehaviour
 
     public void OnCollisionExit(Collision other)
     {
-        grounded = false;
+        if (other.gameObject.tag != "Light")
+            grounded = false;
+    }
+
+    public void OnTriggerEnter(Collider other)
+    {
+        //if (other.gameObject.tag == "Light")
+        //{
+        //    Ray inLight = new Ray(this.transform.position, Vector3.Normalize(this.transform.position - other.gameObject.transform.position));
+        //    RaycastHit lightCheck;
+        //    if (Physics.Raycast(inLight,out lightCheck))
+        //    {
+        //        Debug.Log("OI IM IN THE LIGHT!!!!");
+        //        //Call Some Function to be written in about 5 minutes
+        //    }
+        //} 
+    }
+
+    public void OnTriggerStay(Collider other)
+    {
+        if (other.gameObject.tag == "Light")
+        {
+            Ray inLight = new Ray(this.transform.position, -((this.transform.position - other.gameObject.transform.position)/Vector3.Distance(this.transform.position, other.gameObject.transform.position)));
+            Debug.DrawLine(this.transform.position, other.gameObject.transform.position, Color.green);
+            Debug.DrawRay(this.transform.position, -((this.transform.position - other.gameObject.transform.position)/Vector3.Distance(this.transform.position, other.gameObject.transform.position)), Color.red);
+            RaycastHit lightCheck;
+            LayerMask obstruction = LayerMask.GetMask("Obstruction");
+            if (Physics.Raycast(inLight, out lightCheck))
+            {
+                Debug.Log(lightCheck.transform.gameObject.tag);
+                if (lightCheck.transform.gameObject.tag != "Light")
+                {
+                    Debug.Log("Light is being blocked!!!");
+                }
+                else
+                {
+                    Debug.Log("OI IM IN THE LIGHT!!!!");
+                }
+                //Call Some Function to be written in about 5 minutes
+            }
+        }
     }
 
     IEnumerable CanDrop()
