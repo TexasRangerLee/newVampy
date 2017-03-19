@@ -9,6 +9,7 @@ public class Vamp_Player_Controller : MonoBehaviour
     public float walkingSpeed;
     public float runningSpeed;
     public float jumpingHeight;
+    public bool inLightTrigger;
 
     [SerializeField]
     States currentState;
@@ -21,6 +22,9 @@ public class Vamp_Player_Controller : MonoBehaviour
 
     [SerializeField]
     bool canDropObject = false;
+
+    [SerializeField]
+    LayerMask obstruction; 
 
     Rigidbody rb;
     Vector3 maxHeight;
@@ -43,8 +47,8 @@ public class Vamp_Player_Controller : MonoBehaviour
 
     void FixedUpdate()
     {
-        float forwardMovenemt = Input.GetAxis("Vertical");
-        float straffing = Input.GetAxis("Horizontal");
+        float forwardMovement = Input.GetAxis("Vertical");
+        float strafing = Input.GetAxis("Horizontal");
 
         try
         {
@@ -62,10 +66,6 @@ public class Vamp_Player_Controller : MonoBehaviour
                             {
                                 interact.transform.gameObject.GetComponent<Rigidbody>().useGravity = false;
                                 interact.transform.gameObject.GetComponent<Rigidbody>().isKinematic = true;
-                                //interact.transform.position = new Vector3(this.transform.GetChild(0).transform.position.x, 
-                                //    this.transform.GetChild(0).transform.position.y, this.transform.GetChild(0).transform.transform.position.z + 5.0f);
-                                //interact.transform.gameObject.transform.position = this.transform.TransformPoint(0,0,2.5f/*this.transform.GetChild(0).transform.position.x, 
-                                //    this.transform.GetChild(0).transform.position.y, this.transform.GetChild(0).transform.position.z + 2.5f*/);
                                 interact.transform.gameObject.transform.parent = this.transform;
                                 interact.transform.gameObject.transform.position = this.transform.TransformPoint(0, 0, 2.5f);
                                 interact.transform.gameObject.transform.rotation = Quaternion.EulerAngles(0, 90, 0);
@@ -137,26 +137,14 @@ public class Vamp_Player_Controller : MonoBehaviour
 
                     //Z is the foward demention, must be remembered for when level design takes place
 
-                    if ((Mathf.Abs(forwardMovenemt) <= 0.01f) && (Mathf.Abs(straffing) <= 0.01f))
-                    {
-                        ChangeStates(States.Idle);
-                    }
                     if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.S))
                     {
-                        forward = transform.forward * forwardMovenemt;
+                        forward = transform.forward * forwardMovement;
                     }
                     if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D))
                     {
-                        straiffing = transform.right * straffing;
+                        straiffing = transform.right * strafing;
                     }
-
-                    //else
-                    //{
-                    //    Vector3 walking = new Vector3(straffing, 0.0f, forwardMovenemt);
-
-                    //    walking = walking.normalized * walkingSpeed * Time.deltaTime;
-                    //    rb.MovePosition(transform.position + walking);
-                    //}
 
                     if (Input.GetKeyDown(KeyCode.Space))
                     {
@@ -180,11 +168,11 @@ public class Vamp_Player_Controller : MonoBehaviour
 
                     if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.S))
                     {
-                        forward = transform.forward * forwardMovenemt;
+                        forward = transform.forward * forwardMovement;
                     }
                     if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D))
                     {
-                        straiffing = transform.right * straffing;
+                        straiffing = transform.right * strafing;
                     }
 
                     running = forward + straiffing;
@@ -195,7 +183,7 @@ public class Vamp_Player_Controller : MonoBehaviour
                     {
                         ChangeStates(States.Walking);
                     }
-                    if ((Mathf.Abs(forwardMovenemt) <= 0.01f) && (Mathf.Abs(straffing) <= 0.01f))
+                    if ((Mathf.Abs(forwardMovement) <= 0.01f) && (Mathf.Abs(strafing) <= 0.01f))
                     {
                         ChangeStates(States.Idle);
                     }
@@ -205,38 +193,6 @@ public class Vamp_Player_Controller : MonoBehaviour
                         if (grounded)
                         {
                             rb.velocity = new Vector3(0.0f, jumpingHeight, 0.0f);
-                        }
-                    }
-
-                    break;
-                }
-            case States.Jumping:
-                {
-                    rb.useGravity = false;
-                    if ((rb.position.x <= maxHeight.x) && (rb.position.y <= maxHeight.y) && (rb.position.z <= maxHeight.z) && !falling)
-                    {
-                        Vector3 jump = transform.up;
-                        jump = jump * jumpingHeight * Time.deltaTime;
-                        //Debug.Log(jump);
-                        rb.MovePosition(transform.position + jump);
-                    }
-                    else
-                    {
-                        falling = true;
-                    }
-
-                    if (falling)
-                    {
-                        //Vector3 fallingVector = -transform.up;
-                        //fallingVector = fallingVector * Time.deltaTime;
-                        //rb.MovePosition(transform.position - fallingVector);
-
-                        rb.useGravity = true;
-
-                        if (rb.position == groundedPosition)
-                        {
-                            falling = false;
-                            ChangeStates(States.Idle);
                         }
                     }
 
@@ -271,41 +227,43 @@ public class Vamp_Player_Controller : MonoBehaviour
 
     public void OnTriggerEnter(Collider other)
     {
-        //if (other.gameObject.tag == "Light")
-        //{
-        //    Ray inLight = new Ray(this.transform.position, Vector3.Normalize(this.transform.position - other.gameObject.transform.position));
-        //    RaycastHit lightCheck;
-        //    if (Physics.Raycast(inLight,out lightCheck))
-        //    {
-        //        Debug.Log("OI IM IN THE LIGHT!!!!");
-        //        //Call Some Function to be written in about 5 minutes
-        //    }
-        //} 
+        if (other.tag == "Light")
+        {
+            inLightTrigger = true;
+        }
+    }
+
+    public void OnTriggerExit(Collider other)
+    {
+        if (other.tag == "Light")
+        {
+            inLightTrigger = false;
+        }
     }
 
     public void OnTriggerStay(Collider other)
     {
-        if (other.gameObject.tag == "Light")
-        {
-            Ray inLight = new Ray(this.transform.position, -((this.transform.position - other.gameObject.transform.position)/Vector3.Distance(this.transform.position, other.gameObject.transform.position)));
-            Debug.DrawLine(this.transform.position, other.gameObject.transform.position, Color.green);
-            Debug.DrawRay(this.transform.position, -((this.transform.position - other.gameObject.transform.position)/Vector3.Distance(this.transform.position, other.gameObject.transform.position)), Color.red);
-            RaycastHit lightCheck;
-            LayerMask obstruction = LayerMask.GetMask("Obstruction");
-            if (Physics.Raycast(inLight, out lightCheck))
-            {
-                Debug.Log(lightCheck.transform.gameObject.tag);
-                if (lightCheck.transform.gameObject.tag != "Light")
-                {
-                    Debug.Log("Light is being blocked!!!");
-                }
-                else
-                {
-                    Debug.Log("OI IM IN THE LIGHT!!!!");
-                }
-                //Call Some Function to be written in about 5 minutes
-            }
-        }
+        //if (other.gameObject.tag == "Light")
+        //{
+        //    Ray inLight = new Ray(this.transform.position, -((this.transform.position - other.gameObject.transform.position) / Vector3.Distance(this.transform.position, other.gameObject.transform.position)));
+        //    Debug.DrawLine(this.transform.position, other.gameObject.transform.position, Color.green);
+        //    Debug.DrawRay(this.transform.position, -((this.transform.position - other.gameObject.transform.position)/Vector3.Distance(this.transform.position, other.gameObject.transform.position)), Color.red);
+        //    RaycastHit lightCheck;
+        //    //LayerMask obstruction = LayerMask.GetMask("Obstruction");
+        //    if (Physics.Raycast(inLight, out lightCheck, obstruction))
+        //    {
+        //        Debug.Log(lightCheck.transform.gameObject.tag);
+        //        if (lightCheck.transform.gameObject.tag != "Light")
+        //        {
+        //            Debug.Log("Light is being blocked!!!");
+        //        }
+        //        else
+        //        {
+        //            Debug.Log("OI IM IN THE LIGHT!!!!");
+        //        }
+        //        //Call Some Function to be written in about 5 minutes
+        //    }
+        //}
     }
 
     IEnumerable CanDrop()
