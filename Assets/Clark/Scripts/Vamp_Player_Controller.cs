@@ -24,7 +24,7 @@ public class Vamp_Player_Controller : MonoBehaviour
     bool canDropObject = false;
 
     [SerializeField]
-    LayerMask obstruction; 
+    LayerMask obstruction;
 
     Rigidbody rb;
     Vector3 maxHeight;
@@ -50,8 +50,19 @@ public class Vamp_Player_Controller : MonoBehaviour
         float forwardMovement = Input.GetAxis("Vertical");
         float strafing = Input.GetAxis("Horizontal");
 
-        try
+        if (canDropObject)
         {
+            if (Input.GetKeyDown(KeyCode.E))
+            {
+                if (holdingSomething)
+                {
+                    StartCoroutine("DropTheThing");
+                }
+            }
+        }
+
+        //try
+        //{
             RaycastHit interact;
             Debug.DrawRay(this.gameObject.transform.GetChild(0).transform.position, this.gameObject.transform.GetChild(0).transform.forward * 2.5f);
             if (Physics.Raycast(this.transform.position, this.transform.GetChild(0).transform.forward, out interact, 2.5f))
@@ -60,51 +71,42 @@ public class Vamp_Player_Controller : MonoBehaviour
                 {
                     if (interact.transform.gameObject.tag == "Battery")
                     {
-                        if (Input.GetKeyUp(KeyCode.E))
+                        if (!holdingSomething)
                         {
-                            if (interact.transform.gameObject.GetComponent<Rigidbody>().useGravity)
+                            if (Input.GetKeyUp(KeyCode.E))
                             {
-                                interact.transform.gameObject.GetComponent<Rigidbody>().useGravity = false;
-                                interact.transform.gameObject.GetComponent<Rigidbody>().isKinematic = true;
-                                interact.transform.gameObject.transform.parent = this.transform;
-                                interact.transform.gameObject.transform.position = this.transform.TransformPoint(0, 0, 2.5f);
-                                interact.transform.gameObject.transform.rotation = Quaternion.EulerAngles(0, 90, 0);
-                                holdingSomething = true;
-                                canDropObject = false;
-                                StartCoroutine("CanDrop");
-                            }
+                                if (interact.transform.gameObject.GetComponent<Rigidbody>().useGravity)
+                                {
+                                    interact.transform.gameObject.GetComponent<Rigidbody>().useGravity = false;
+                                    interact.transform.gameObject.GetComponent<Rigidbody>().isKinematic = true;
+                                    interact.transform.gameObject.transform.parent = this.transform;
+                                    interact.transform.gameObject.transform.position = this.transform.TransformPoint(0, 0, 2.5f);
+                                    interact.transform.gameObject.transform.rotation = Quaternion.Euler(new Vector3(0, 90, 0));
+                                    holdingSomething = true;
+                                    canDropObject = false;
+                                    StartCoroutine("CanDrop");
+                                }
+                            } 
                         }
                     }
 
-                    interact.transform.gameObject.GetComponent<GlowObject>().enabled = true;
-                    if (Input.GetKeyUp(KeyCode.E))
+                    //interact.transform.gameObject.GetComponent<GlowObject>().enabled = true;
+                    else if (interact.transform.gameObject.tag == "Door")
                     {
-                        interact.transform.gameObject.GetComponent<DoorOpenCloseLerpScript>().MoveDoor();
+                        if (Input.GetKeyUp(KeyCode.E))
+                        {
+                            interact.transform.gameObject.GetComponent<DoorOpenCloseLerpScript>().MoveDoor();
+                        }
                     }
                 }
-                interact.transform.gameObject.GetComponent<GlowObject>().enabled = false;
+                //interact.transform.gameObject.GetComponent<GlowObject>().enabled = false;
             }
-        }
-        catch
-        {
+        //}
+        //catch
+        //{
 
-        }
+        //}
 
-        if (canDropObject)
-        {
-            if (Input.GetKeyUp(KeyCode.E))
-            {
-                if (holdingSomething)
-                {
-                    this.transform.GetChild(1).transform.gameObject.GetComponent<Rigidbody>().useGravity = true;
-                    this.transform.GetChild(1).transform.gameObject.GetComponent<Rigidbody>().isKinematic = false;
-                    this.transform.GetChild(1).transform.gameObject.transform.localScale.Set(1, 1, 1);
-                    this.transform.GetChild(1).transform.gameObject.transform.parent = null;
-                    holdingSomething = false;
-                    canDropObject = false;
-                }
-            }
-        }
 
 
         if (Input.GetKey(KeyCode.LeftShift))
@@ -243,32 +245,24 @@ public class Vamp_Player_Controller : MonoBehaviour
 
     public void OnTriggerStay(Collider other)
     {
-        //if (other.gameObject.tag == "Light")
-        //{
-        //    Ray inLight = new Ray(this.transform.position, -((this.transform.position - other.gameObject.transform.position) / Vector3.Distance(this.transform.position, other.gameObject.transform.position)));
-        //    Debug.DrawLine(this.transform.position, other.gameObject.transform.position, Color.green);
-        //    Debug.DrawRay(this.transform.position, -((this.transform.position - other.gameObject.transform.position)/Vector3.Distance(this.transform.position, other.gameObject.transform.position)), Color.red);
-        //    RaycastHit lightCheck;
-        //    //LayerMask obstruction = LayerMask.GetMask("Obstruction");
-        //    if (Physics.Raycast(inLight, out lightCheck, obstruction))
-        //    {
-        //        Debug.Log(lightCheck.transform.gameObject.tag);
-        //        if (lightCheck.transform.gameObject.tag != "Light")
-        //        {
-        //            Debug.Log("Light is being blocked!!!");
-        //        }
-        //        else
-        //        {
-        //            Debug.Log("OI IM IN THE LIGHT!!!!");
-        //        }
-        //        //Call Some Function to be written in about 5 minutes
-        //    }
-        //}
+
     }
 
-    IEnumerable CanDrop()
+    IEnumerator CanDrop()
     {
-        canDropObject = true;
         yield return new WaitForSeconds(1);
+        canDropObject = true;
+    }
+
+    IEnumerator DropTheThing()
+    {
+        this.transform.GetChild(1).transform.gameObject.GetComponent<Rigidbody>().useGravity = true;
+        this.transform.GetChild(1).transform.gameObject.GetComponent<Rigidbody>().isKinematic = false;
+        this.transform.GetChild(1).transform.localScale.Set(1, 1, 1);
+        this.transform.GetChild(1).transform.parent = null;
+        holdingSomething = false;
+        canDropObject = false;
+
+        yield return new WaitForSeconds(0.1f);
     }
 }
