@@ -6,12 +6,14 @@ public class BatterySocketScript : MonoBehaviour
 {
 
     public bool isPowered;
-
+    GameObject wireController;
+    WireControllerScript script;
 
     // Use this for initialization
     void Start()
     {
-
+        wireController = this.transform.parent.parent.gameObject;
+        script = wireController.GetComponent<WireControllerScript>();
     }
 
     // Update is called once per frame
@@ -22,11 +24,12 @@ public class BatterySocketScript : MonoBehaviour
 
     //if a battery object is colliding with the interior zone of a battery socket,
     //the battery socket is considered powered NEEDS RIGIDBODY ON ONE OR THE OTHER TO WORK
-    void OnTriggerStay(Collider other)
+    void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Battery"))
         {
             isPowered = true;
+            script.evaluateStatus();
         }
     }
 
@@ -37,6 +40,7 @@ public class BatterySocketScript : MonoBehaviour
         if (other.CompareTag("Battery"))
         {
             isPowered = false;
+            script.evaluateStatus();
         }
     }
 }
