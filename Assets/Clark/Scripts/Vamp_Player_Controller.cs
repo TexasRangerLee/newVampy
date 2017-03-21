@@ -42,7 +42,7 @@ public class Vamp_Player_Controller : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
+        //Debug.Log(inLightTrigger + " from VPC.");
     }
 
     void FixedUpdate()

@@ -19,9 +19,11 @@ public class Player_in_Light : MonoBehaviour
 	// Update is called once per frame
 	void Update () 
     {
+        //Debug.Log(Player.GetComponent<Vamp_Player_Controller>().inLightTrigger + " from Light");
+
         try
         {
-            if (Player.GetComponentInChildren<Vamp_Player_Controller>().inLightTrigger)
+            if (Player.GetComponent<Vamp_Player_Controller>().inLightTrigger)
             {
                 CanIHurtPlayer();
             }
