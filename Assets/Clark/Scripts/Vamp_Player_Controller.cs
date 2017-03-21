@@ -9,6 +9,7 @@ public class Vamp_Player_Controller : MonoBehaviour
     public float walkingSpeed;
     public float runningSpeed;
     public float jumpingHeight;
+    public bool inLightTrigger;
 
     [SerializeField]
     States currentState;
@@ -21,6 +22,9 @@ public class Vamp_Player_Controller : MonoBehaviour
 
     [SerializeField]
     bool canDropObject = false;
+
+    [SerializeField]
+    LayerMask obstruction;
 
     Rigidbody rb;
     Vector3 maxHeight;
@@ -43,11 +47,22 @@ public class Vamp_Player_Controller : MonoBehaviour
 
     void FixedUpdate()
     {
-        float forwardMovenemt = Input.GetAxis("Vertical");
-        float straffing = Input.GetAxis("Horizontal");
+        float forwardMovement = Input.GetAxis("Vertical");
+        float strafing = Input.GetAxis("Horizontal");
 
-        try
+        if (canDropObject)
         {
+            if (Input.GetKeyDown(KeyCode.E))
+            {
+                if (holdingSomething)
+                {
+                    StartCoroutine("DropTheThing");
+                }
+            }
+        }
+
+        //try
+        //{
             RaycastHit interact;
             Debug.DrawRay(this.gameObject.transform.GetChild(0).transform.position, this.gameObject.transform.GetChild(0).transform.forward * 2.5f);
             if (Physics.Raycast(this.transform.position, this.transform.GetChild(0).transform.forward, out interact, 2.5f))
@@ -56,55 +71,42 @@ public class Vamp_Player_Controller : MonoBehaviour
                 {
                     if (interact.transform.gameObject.tag == "Battery")
                     {
-                        if (Input.GetKeyUp(KeyCode.E))
+                        if (!holdingSomething)
                         {
-                            if (interact.transform.gameObject.GetComponent<Rigidbody>().useGravity)
+                            if (Input.GetKeyUp(KeyCode.E))
                             {
-                                interact.transform.gameObject.GetComponent<Rigidbody>().useGravity = false;
-                                interact.transform.gameObject.GetComponent<Rigidbody>().isKinematic = true;
-                                //interact.transform.position = new Vector3(this.transform.GetChild(0).transform.position.x, 
-                                //    this.transform.GetChild(0).transform.position.y, this.transform.GetChild(0).transform.transform.position.z + 5.0f);
-                                //interact.transform.gameObject.transform.position = this.transform.TransformPoint(0,0,2.5f/*this.transform.GetChild(0).transform.position.x, 
-                                //    this.transform.GetChild(0).transform.position.y, this.transform.GetChild(0).transform.position.z + 2.5f*/);
-                                interact.transform.gameObject.transform.parent = this.transform;
-                                interact.transform.gameObject.transform.position = this.transform.TransformPoint(0, 0, 2.5f);
-                                interact.transform.gameObject.transform.rotation = Quaternion.EulerAngles(0, 90, 0);
-                                holdingSomething = true;
-                                canDropObject = false;
-                                StartCoroutine("CanDrop");
-                            }
+                                if (interact.transform.gameObject.GetComponent<Rigidbody>().useGravity)
+                                {
+                                    interact.transform.gameObject.GetComponent<Rigidbody>().useGravity = false;
+                                    interact.transform.gameObject.GetComponent<Rigidbody>().isKinematic = true;
+                                    interact.transform.gameObject.transform.parent = this.transform;
+                                    interact.transform.gameObject.transform.position = this.transform.TransformPoint(0, 0, 2.5f);
+                                    interact.transform.gameObject.transform.rotation = Quaternion.Euler(new Vector3(0, 90, 0));
+                                    holdingSomething = true;
+                                    canDropObject = false;
+                                    StartCoroutine("CanDrop");
+                                }
+                            } 
                         }
                     }
 
-                    interact.transform.gameObject.GetComponent<GlowObject>().enabled = true;
-                    if (Input.GetKeyUp(KeyCode.E))
+                    //interact.transform.gameObject.GetComponent<GlowObject>().enabled = true;
+                    else if (interact.transform.gameObject.tag == "Door")
                     {
-                        interact.transform.gameObject.GetComponent<DoorOpenCloseLerpScript>().MoveDoor();
+                        if (Input.GetKeyUp(KeyCode.E))
+                        {
+                            interact.transform.gameObject.GetComponent<DoorOpenCloseLerpScript>().MoveDoor();
+                        }
                     }
                 }
-                interact.transform.gameObject.GetComponent<GlowObject>().enabled = false;
+                //interact.transform.gameObject.GetComponent<GlowObject>().enabled = false;
             }
-        }
-        catch
-        {
+        //}
+        //catch
+        //{
 
-        }
+        //}
 
-        if (canDropObject)
-        {
-            if (Input.GetKeyUp(KeyCode.E))
-            {
-                if (holdingSomething)
-                {
-                    this.transform.GetChild(1).transform.gameObject.GetComponent<Rigidbody>().useGravity = true;
-                    this.transform.GetChild(1).transform.gameObject.GetComponent<Rigidbody>().isKinematic = false;
-                    this.transform.GetChild(1).transform.gameObject.transform.localScale.Set(1, 1, 1);
-                    this.transform.GetChild(1).transform.gameObject.transform.parent = null;
-                    holdingSomething = false;
-                    canDropObject = false;
-                }
-            }
-        }
 
 
         if (Input.GetKey(KeyCode.LeftShift))
@@ -137,26 +139,14 @@ public class Vamp_Player_Controller : MonoBehaviour
 
                     //Z is the foward demention, must be remembered for when level design takes place
 
-                    if ((Mathf.Abs(forwardMovenemt) <= 0.01f) && (Mathf.Abs(straffing) <= 0.01f))
-                    {
-                        ChangeStates(States.Idle);
-                    }
                     if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.S))
                     {
-                        forward = transform.forward * forwardMovenemt;
+                        forward = transform.forward * forwardMovement;
                     }
                     if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D))
                     {
-                        straiffing = transform.right * straffing;
+                        straiffing = transform.right * strafing;
                     }
-
-                    //else
-                    //{
-                    //    Vector3 walking = new Vector3(straffing, 0.0f, forwardMovenemt);
-
-                    //    walking = walking.normalized * walkingSpeed * Time.deltaTime;
-                    //    rb.MovePosition(transform.position + walking);
-                    //}
 
                     if (Input.GetKeyDown(KeyCode.Space))
                     {
@@ -180,11 +170,11 @@ public class Vamp_Player_Controller : MonoBehaviour
 
                     if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.S))
                     {
-                        forward = transform.forward * forwardMovenemt;
+                        forward = transform.forward * forwardMovement;
                     }
                     if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D))
                     {
-                        straiffing = transform.right * straffing;
+                        straiffing = transform.right * strafing;
                     }
 
                     running = forward + straiffing;
@@ -195,7 +185,7 @@ public class Vamp_Player_Controller : MonoBehaviour
                     {
                         ChangeStates(States.Walking);
                     }
-                    if ((Mathf.Abs(forwardMovenemt) <= 0.01f) && (Mathf.Abs(straffing) <= 0.01f))
+                    if ((Mathf.Abs(forwardMovement) <= 0.01f) && (Mathf.Abs(strafing) <= 0.01f))
                     {
                         ChangeStates(States.Idle);
                     }
@@ -205,38 +195,6 @@ public class Vamp_Player_Controller : MonoBehaviour
                         if (grounded)
                         {
                             rb.velocity = new Vector3(0.0f, jumpingHeight, 0.0f);
-                        }
-                    }
-
-                    break;
-                }
-            case States.Jumping:
-                {
-                    rb.useGravity = false;
-                    if ((rb.position.x <= maxHeight.x) && (rb.position.y <= maxHeight.y) && (rb.position.z <= maxHeight.z) && !falling)
-                    {
-                        Vector3 jump = transform.up;
-                        jump = jump * jumpingHeight * Time.deltaTime;
-                        //Debug.Log(jump);
-                        rb.MovePosition(transform.position + jump);
-                    }
-                    else
-                    {
-                        falling = true;
-                    }
-
-                    if (falling)
-                    {
-                        //Vector3 fallingVector = -transform.up;
-                        //fallingVector = fallingVector * Time.deltaTime;
-                        //rb.MovePosition(transform.position - fallingVector);
-
-                        rb.useGravity = true;
-
-                        if (rb.position == groundedPosition)
-                        {
-                            falling = false;
-                            ChangeStates(States.Idle);
                         }
                     }
 
@@ -265,12 +223,46 @@ public class Vamp_Player_Controller : MonoBehaviour
 
     public void OnCollisionExit(Collision other)
     {
-        grounded = false;
+        if (other.gameObject.tag != "Light")
+            grounded = false;
     }
 
-    IEnumerable CanDrop()
+    public void OnTriggerEnter(Collider other)
     {
-        canDropObject = true;
+        if (other.tag == "Light")
+        {
+            inLightTrigger = true;
+        }
+    }
+
+    public void OnTriggerExit(Collider other)
+    {
+        if (other.tag == "Light")
+        {
+            inLightTrigger = false;
+        }
+    }
+
+    public void OnTriggerStay(Collider other)
+    {
+
+    }
+
+    IEnumerator CanDrop()
+    {
         yield return new WaitForSeconds(1);
+        canDropObject = true;
+    }
+
+    IEnumerator DropTheThing()
+    {
+        this.transform.GetChild(1).transform.gameObject.GetComponent<Rigidbody>().useGravity = true;
+        this.transform.GetChild(1).transform.gameObject.GetComponent<Rigidbody>().isKinematic = false;
+        this.transform.GetChild(1).transform.localScale.Set(1, 1, 1);
+        this.transform.GetChild(1).transform.parent = null;
+        holdingSomething = false;
+        canDropObject = false;
+
+        yield return new WaitForSeconds(0.1f);
     }
 }
