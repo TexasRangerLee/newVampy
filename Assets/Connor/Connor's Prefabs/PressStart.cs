@@ -7,12 +7,14 @@ using UnityEngine;
 public class PressStart : MonoBehaviour {
     private Button but;
     private Text tex;
+    public AudioSource click;
     public GameObject[] secButtons;
 	// Use this for initialization
 	void Start () {
         //secButtons = GameObject.FindGameObjectsWithTag("2ndButton");
         but = GetComponent<Button>();
         tex = GetComponentInChildren<Text>();
+        click = GetComponent<AudioSource>();
 	}
 	
 	// Update is called once per frame
@@ -23,6 +25,7 @@ public class PressStart : MonoBehaviour {
     public void Pressed()
     {
         StartCoroutine(StartPressed());
+        click.Play();
     }
 
     
