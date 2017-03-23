@@ -6,11 +6,11 @@ public class PowerToggleScript : MonoBehaviour {
     public Material powered;
     public Material unpowered;
     public Renderer rend;
-    public bool isPowered;
 
 	// Use this for initialization
 	void Start () {
-        rend = GetComponent<Renderer>();
+        rend = this.GetComponent<Renderer>();
+        rend.enabled = true;
 	}
 	
 	// Update is called once per frame
@@ -20,16 +20,14 @@ public class PowerToggleScript : MonoBehaviour {
     //if cable is unpowered, change to powered;
     //if cable is powered, change to unpowered
     //call this whenever a power/cable system toggles
-    public void changePowerState()
+    public void changePowerState(bool isPowered)
     {
-        if (isPowered)
+        if (!isPowered)
         {
-            isPowered = false;
             rend.material = unpowered;
         }
         else
         {
-            isPowered = true;
             rend.material = powered;
         }
     }
