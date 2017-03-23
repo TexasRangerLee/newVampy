@@ -22,7 +22,7 @@ public class PowerToggleScript : MonoBehaviour {
     //call this whenever a power/cable system toggles
     public void changePowerState(bool isPowered)
     {
-        if (!isPowered)
+        if (!isPowered) //because i'm sick and fuck writing this hyper legibly
         {
             rend.material = unpowered;
         }
