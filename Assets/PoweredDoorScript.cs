@@ -2,8 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DoorOpenCloseLerpScript : MonoBehaviour
+public class PoweredDoorScript : MonoBehaviour
 {
+    //powered variant variables
+    public GameObject connectedWire;  //MUST BE SET IN EDITOR
+    public bool hasPower;
+    public PowerToggleScript wireScript;
+
+
     //reference to object this is on
     public GameObject self;
 
@@ -67,11 +73,11 @@ public class DoorOpenCloseLerpScript : MonoBehaviour
     void Update()
     {
         //Code below for triggering lerp on keycode; deprecated with new function system below
-        if (Input.GetKeyDown(KeyCode.K) && readyToTurn)
-        {
-            //Old code to move door on keypress
-            MoveDoor();
-        }
+        //if (Input.GetKeyDown(KeyCode.K) && readyToTurn)
+        //{
+        //    //Old code to move door on keypress
+        //    MoveDoor();
+        //}
 
         //NEW FRAME INDEPENDENT LERPING STUFF BELOW
 
@@ -98,6 +104,12 @@ public class DoorOpenCloseLerpScript : MonoBehaviour
                 totalDeltaTime = 0;
                 startRotation = self.transform.rotation;
             }
+        }
+        //catch on powered doors; door will move to end position uninterrupted
+        //then check to make sure it matches power state; if not, it moves back uninterrupted
+        if (wireScript.hasPower != hasPower)
+        {
+            MoveDoor();
         }
 
         //OLD FRAME DEPENDENT CODE, NO LONGER IN USE
