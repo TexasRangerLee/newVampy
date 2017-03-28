@@ -1,11 +1,5 @@
-Shader "VolumetricLight"
+Shader "Sandbox/VolumetricLight"
 {
-	Properties
-	{
-		[HideInInspector]_MainTex ("Texture", 2D) = "white" {}
-		[HideInInspector]_ZTest ("ZTest", Float) = 0
-		[HideInInspector]_LightColor("_LightColor", Color) = (1,1,1,1)
-	}
 	SubShader
 	{
 		Tags { "RenderType"="Opaque" }
@@ -20,7 +14,6 @@ Shader "VolumetricLight"
 		#include "UnityCG.cginc"
 		#include "UnityDeferredLibrary.cginc"
 
-		sampler3D _NoiseTexture;
 		sampler2D _DitherTexture;
 		
 		float4 _FrustumCorners[4];
@@ -36,22 +29,10 @@ Shader "VolumetricLight"
 
 		float3 _CameraForward;
 
-		// x: scattering coef, y: extinction coef, z: range w: skybox extinction coef
+		// z: range 
 		float4 _VolumetricLight;
         // x: 1 - g^2, y: 1 + g^2, z: 2*g, w: 1/4pi
         float4 _MieG;
-
-		// x: scale, y: intensity, z: intensity offset
-		float4 _NoiseData;
-        // x: x velocity, y: z velocity
-		float4 _NoiseVelocity;
-		// x:  ground level, y: height scale, z: unused, w: unused
-		float4 _HeightFog;
-		//float4 _LightDir;
-
-		float _MaxRayLength;
-
-		int _SampleCount;
 
 		struct v2f
 		{
@@ -96,10 +77,10 @@ Shader "VolumetricLight"
 			float3 sc3 = mul(unity_WorldToShadow[3], wpos).xyz;
 			
 			float4 shadowMapCoordinate = float4(sc0 * cascadeWeights[0] + sc1 * cascadeWeights[1] + sc2 * cascadeWeights[2] + sc3 * cascadeWeights[3], 1);
-
+#if defined(UNITY_REVERSED_Z)
 			float  noCascadeWeights = 1 - dot(cascadeWeights, float4(1, 1, 1, 1));
 			shadowMapCoordinate.z += noCascadeWeights;
-
+#endif
 			return shadowMapCoordinate;
 		}
 		
@@ -111,16 +92,6 @@ Shader "VolumetricLight"
 		float GetLightAttenuation(float3 wpos)
 		{
 			float atten = 0;
-
-			// sample cascade shadow map
-			float4 cascadeWeights = GetCascadeWeights_SplitSpheres(wpos);
-			bool inside = dot(cascadeWeights, float4(1, 1, 1, 1)) < 4;
-			float4 samplePos = GetCascadeShadowCoord(float4(wpos, 1), cascadeWeights);
-
-			atten = inside ? UNITY_SAMPLE_SHADOW(_CascadeShadowMapTexture, samplePos.xyz) : 1.0f;
-			atten = _LightShadowData.r + atten * (1 - _LightShadowData.r);
-			//atten = inside ? tex2Dproj(_ShadowMapTexture, float4((samplePos).xyz, 1)).r : 1.0f;
-
 #if defined (SPOT)	
 			float3 tolight = _LightPos.xyz - wpos;
 			half3 lightDir = normalize(tolight);
@@ -132,10 +103,11 @@ Shader "VolumetricLight"
 			float att = dot(tolight, tolight) * _LightPos.w;
 			atten *= tex2D(_LightTextureB0, att.rr).UNITY_ATTEN_CHANNEL;
 
-#if defined(SHADOWS_DEPTH)
-			float4 shadowCoord = mul(_MyWorld2Shadow, float4(wpos, 1));
-			atten *= saturate(UnitySampleShadowmap(shadowCoord));
-#endif
+	#if defined(SHADOWS_DEPTH)
+				float4 shadowCoord = mul(_MyWorld2Shadow, float4(wpos, 1));
+				atten *= saturate(UnitySampleShadowmap(shadowCoord));
+	#endif
+
 #elif defined (POINT) || defined (POINT_COOKIE)
 			float3 tolight = wpos - _LightPos.xyz;
 			half3 lightDir = -normalize(tolight);
@@ -145,9 +117,13 @@ Shader "VolumetricLight"
 
 			atten *= UnityDeferredComputeShadow(tolight, 0, float2(0, 0));
 
+	#if defined (POINT_COOKIE)
+				atten *= texCUBEbias(_LightTexture0, float4(mul(_MyLightMatrix0, half4(wpos, 1)).xyz, -8)).w;
+	#endif //POINT_COOKIE
 #endif
 			return atten;
-		}  
+		}
+
 
 		//-----------------------------------------------------------------------------------------
 		// MieScattering
@@ -170,7 +146,7 @@ Shader "VolumetricLight"
 			float offset = tex2D(_DitherTexture, interleavedPos / 8.0 + float2(0.5 / 8.0, 0.5 / 8.0)).w;
 #endif
 
-			int stepCount = _SampleCount;
+			int stepCount = 32;
 
 			float stepSize = rayLength / stepCount;
 			float3 step = rayDir * stepSize;
@@ -180,18 +156,15 @@ Shader "VolumetricLight"
 			float4 vlight = 0;
 
 			float cosAngle;
-
 			// we don't know about density between camera and light's volume, assume 0.5
-			float extinction = length(_WorldSpaceCameraPos - currentPosition) * _VolumetricLight.y * 0.5;
+			float extinction = 0;
 
 			[loop]
 			for (int i = 0; i < stepCount; ++i)
 			{
 				float atten = GetLightAttenuation(currentPosition);
-				float density = 1;
 
-                float scattering = _VolumetricLight.x * stepSize * density;
-				extinction += _VolumetricLight.y * stepSize * density;// +scattering;
+                float scattering = stepSize;
 
 				float4 light = atten * scattering * exp(-extinction);
 
@@ -199,7 +172,6 @@ Shader "VolumetricLight"
                 float3 tolight = normalize(currentPosition - _LightPos.xyz);
                 cosAngle = dot(tolight, -rayDir);
 				light *= MieScattering(cosAngle, _MieG);
-
 				vlight += light;
 
 				currentPosition += step;				
@@ -211,7 +183,6 @@ Shader "VolumetricLight"
 			vlight = max(0, vlight);
 
             vlight.w = 0;
-
 			return vlight;
 		}
 
@@ -276,8 +247,6 @@ Shader "VolumetricLight"
 
 			#define UNITY_HDR_ON
 
-			#pragma shader_feature HEIGHT_FOG
-			#pragma shader_feature NOISE
 			#pragma shader_feature SHADOWS_CUBE
 			#pragma shader_feature POINT_COOKIE
 			#pragma shader_feature POINT
@@ -326,14 +295,12 @@ Shader "VolumetricLight"
 
 			#define UNITY_HDR_ON
 
-			#pragma shader_feature HEIGHT_FOG
-			#pragma shader_feature NOISE
 			#pragma shader_feature SHADOWS_DEPTH
 			#pragma shader_feature SPOT
 
-			#ifdef SHADOWS_DEPTH
-			#define SHADOWS_NATIVE
-			#endif
+#ifdef SHADOWS_DEPTH
+#define SHADOWS_NATIVE
+#endif
 
 			fixed4 fragPointInside(v2f i) : SV_Target
 			{
@@ -362,7 +329,6 @@ Shader "VolumetricLight"
 		// pass 2 - point light, camera outside
 		Pass
 		{
-			//ZTest Off
 			ZTest [_ZTest]
 			Cull Back
 			ZWrite Off
@@ -375,10 +341,7 @@ Shader "VolumetricLight"
 
 			#define UNITY_HDR_ON
 
-			#pragma shader_feature HEIGHT_FOG
 			#pragma shader_feature SHADOWS_CUBE
-			#pragma shader_feature NOISE
-			//#pragma multi_compile POINT POINT_COOKIE
 			#pragma shader_feature POINT_COOKIE
 			#pragma shader_feature POINT
 
@@ -421,7 +384,6 @@ Shader "VolumetricLight"
 		// pass 3 - spot light, camera outside
 		Pass
 		{
-			//ZTest Off
 			ZTest[_ZTest]
 			Cull Back
 			ZWrite Off
@@ -434,9 +396,7 @@ Shader "VolumetricLight"
 
 			#define UNITY_HDR_ON
 
-			#pragma shader_feature HEIGHT_FOG
 			#pragma shader_feature SHADOWS_DEPTH
-			#pragma shader_feature NOISE
 			#pragma shader_feature SPOT
 
 			#ifdef SHADOWS_DEPTH
