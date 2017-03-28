@@ -1,4 +1,4 @@
-Shader "Blur"
+Shader "Hidden/blur"
 {
 	Properties
 	{
@@ -10,14 +10,6 @@ Shader "Blur"
 		Cull Off ZWrite Off ZTest Always
 
 		CGINCLUDE
-
-        //--------------------------------------------------------------------------------------------
-        // Downsample, bilateral blur and upsample config
-        //--------------------------------------------------------------------------------------------        
-        // method used to downsample depth buffer: 0 = min; 1 = max; 2 = min/max in chessboard pattern
-        #define BLUR_DEPTH_FACTOR 0.5
-        #define HALF_RES_BLUR_KERNEL_SIZE 5
-        //--------------------------------------------------------------------------------------------
 
 		#define PI 3.1415927f
 
@@ -45,14 +37,7 @@ Shader "Blur"
 
 		struct v2fDownsample
 		{
-#if SHADER_TARGET > 40
 			float2 uv : TEXCOORD0;
-#else
-			float2 uv00 : TEXCOORD0;
-			float2 uv01 : TEXCOORD1;
-			float2 uv10 : TEXCOORD2;
-			float2 uv11 : TEXCOORD3;
-#endif
 			float4 vertex : SV_POSITION;
 		};
 
@@ -74,6 +59,16 @@ Shader "Blur"
 			return o;
 		}
 
+		//-----------------------------------------------------------------------------------------
+		// vertDownsampleDepth
+		//-----------------------------------------------------------------------------------------
+		v2fDownsample vertDownsampleDepth(appdata v, float2 texelSize)
+		{
+			v2fDownsample o;
+			o.vertex = mul(UNITY_MATRIX_MVP, v.vertex);
+			o.uv = v.uv;
+			return o;
+		}
 
 		//-----------------------------------------------------------------------------------------
 		// vertUpsample
@@ -141,6 +136,22 @@ Shader "Blur"
 		}
 
 		//-----------------------------------------------------------------------------------------
+		// DownsampleDepth
+		//-----------------------------------------------------------------------------------------
+		float DownsampleDepth(v2fDownsample input, Texture2D depthTexture, SamplerState depthSampler)
+		{
+            float4 depth = depthTexture.Gather(depthSampler, input.uv);
+
+			float minDepth = min(min(depth.x, depth.y), min(depth.z, depth.w));
+			float maxDepth = max(max(depth.x, depth.y), max(depth.z, depth.w));
+
+			// chessboard pattern
+			int2 position = input.vertex.xy % 2;
+			int index = position.x + position.y;
+			return index == 1 ? minDepth : maxDepth;
+		}
+		
+		//-----------------------------------------------------------------------------------------
 		// GaussianWeight
 		//-----------------------------------------------------------------------------------------
 		float GaussianWeight(float offset, float deviation)
@@ -155,12 +166,11 @@ Shader "Blur"
 		//-----------------------------------------------------------------------------------------
 		float4 BilateralBlur(v2f input, int2 direction, Texture2D depth, SamplerState depthSampler, const int kernelRadius, float2 pixelSize)
 		{
-			const float deviation = kernelRadius / 2.5;
+			const float deviation = kernelRadius / 1.5f; // make it really strong
 
 			float2 uv = input.uv;
 			float4 centerColor = _MainTex.Sample(sampler_MainTex, uv);
 			float3 color = centerColor.xyz;
-			//return float4(color, 1);
 			float centerDepth = (LinearEyeDepth(depth.Sample(depthSampler, uv)));
 
 			float weightSum = 0;
@@ -177,7 +187,7 @@ Shader "Blur"
                 float sampleDepth = (LinearEyeDepth(depth.Sample(depthSampler, input.uv, offset)));
 
 				float depthDiff = abs(centerDepth - sampleDepth);
-                float dFactor = depthDiff * BLUR_DEPTH_FACTOR;
+                float dFactor = depthDiff * 0.5f;
 				float w = exp(-(dFactor * dFactor));
 
 				// gaussian weight is computed from constants only -> will be computed in compile time
@@ -194,7 +204,7 @@ Shader "Blur"
                 float sampleDepth = (LinearEyeDepth(depth.Sample(depthSampler, input.uv, offset)));
 
 				float depthDiff = abs(centerDepth - sampleDepth);
-                float dFactor = depthDiff * BLUR_DEPTH_FACTOR;
+                float dFactor = depthDiff * 0.5f;
 				float w = exp(-(dFactor * dFactor));
 				
 				// gaussian weight is computed from constants only -> will be computed in compile time
@@ -210,10 +220,8 @@ Shader "Blur"
 
 		ENDCG
 
-		Pass{}Pass{}
-
-		// pass 2 - horizontal blur (lores)
-		Pass
+		//Pass 0
+		Pass 
 		{
 			CGPROGRAM
             #pragma vertex vert
@@ -221,14 +229,14 @@ Shader "Blur"
             #pragma target 4.0
 
 			fixed4 horizontalFrag(v2f input) : SV_Target
-			{
-	            return BilateralBlur(input, int2(1, 0), _HalfResDepthBuffer, sampler_HalfResDepthBuffer, HALF_RES_BLUR_KERNEL_SIZE, _HalfResDepthBuffer_TexelSize.xy);
-			}
+		{
+            return BilateralBlur(input, int2(1, 0), _HalfResDepthBuffer, sampler_HalfResDepthBuffer, 5.0f, _HalfResDepthBuffer_TexelSize.xy);
+		}
 
 			ENDCG
 		}
 
-		// pass 3 - vertical blur (lores)
+		//Pass 1
 		Pass
 		{
 			CGPROGRAM
@@ -237,16 +245,35 @@ Shader "Blur"
             #pragma target 4.0
 
 			fixed4 verticalFrag(v2f input) : SV_Target
+		{
+            return BilateralBlur(input, int2(0, 1), _HalfResDepthBuffer, sampler_HalfResDepthBuffer, 5.0f, _HalfResDepthBuffer_TexelSize.xy);
+		}
+
+			ENDCG
+		}
+
+		// pass 2
+		Pass
+		{
+			CGPROGRAM
+			#pragma vertex vertHalfDepth
+			#pragma fragment frag
+            #pragma target gl4.1
+
+			v2fDownsample vertHalfDepth(appdata v)
 			{
-	            return BilateralBlur(input, int2(1, 0), _HalfResDepthBuffer, sampler_HalfResDepthBuffer, HALF_RES_BLUR_KERNEL_SIZE, _HalfResDepthBuffer_TexelSize.xy);
+                return vertDownsampleDepth(v, _CameraDepthTexture_TexelSize);
+			}
+
+			float frag(v2fDownsample input) : SV_Target
+			{
+                return DownsampleDepth(input, _CameraDepthTexture, sampler_CameraDepthTexture);
 			}
 
 			ENDCG
 		}
 
-		Pass{}
-
-		// pass 5 - bilateral upsample
+		// pass 3
 		Pass
 		{
 			Blend One Zero

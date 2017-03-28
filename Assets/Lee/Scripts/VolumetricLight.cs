@@ -11,12 +11,13 @@ public class VolumetricLight : MonoBehaviour
     private Light _light;
     private Material _material;
     private CommandBuffer _commandBuffer;
-    private CommandBuffer _cascadeShadowCommandBuffer; 
+    private CommandBuffer _cascadeShadowCommandBuffer;
 
     public Light Light { get { return _light; } }
     public Material VolumetricMaterial { get { return _material; } }
+    
+	private bool _reversedZ = true;
 
-    /// <summary>
     void Start() 
     {
         _commandBuffer = new CommandBuffer();
@@ -30,31 +31,27 @@ public class VolumetricLight : MonoBehaviour
 
         _light.AddCommandBuffer(LightEvent.AfterShadowMap, _commandBuffer);
 
-        Shader shader = Shader.Find("VolumetricLight");
+        Shader shader = Shader.Find("Sandbox/VolumetricLight");
         if (shader == null)
             throw new Exception("Critical Error: \"Sandbox/VolumetricLight\" shader is missing. Make sure it is included in \"Always Included Shaders\" in ProjectSettings/Graphics.");
-        _material = new Material(shader); // new Material(VolumetricLightRenderer.GetLightMaterial());
+        _material = new Material(shader);
     }
 
-    /// <summary>
     void OnEnable()
     {
         VolumetricLightRenderer.PreRenderEvent += VolumetricLightRenderer_PreRenderEvent;
     }
 
-    /// <summary>
     void OnDisable()
     {
         VolumetricLightRenderer.PreRenderEvent -= VolumetricLightRenderer_PreRenderEvent;
     }
 
-    /// <summary>
     public void OnDestroy()
     {        
         Destroy(_material);
     }
 
-    /// <summary>
     private void VolumetricLightRenderer_PreRenderEvent(VolumetricLightRenderer renderer, Matrix4x4 viewProj)
     {
         // light was destroyed without deregistring, deregister now
@@ -68,18 +65,23 @@ public class VolumetricLight : MonoBehaviour
 
         _material.SetVector("_CameraForward", Camera.current.transform.forward);
 
-		_material.SetInt("_SampleCount", 32);
-        _material.SetVector("_NoiseVelocity", new Vector4(0.0f, 0.0f));
-		_material.SetVector("_NoiseData", new Vector4(0.0f, 0.0f, 0.0f));
-		_material.SetVector("_MieG", new Vector4(1.0f, 1.0f, 0.0f, 1.0f / (4.0f * Mathf.PI)));
-		_material.SetVector("_VolumetricLight", new Vector4(1.0f, 0.0f, _light.range, 1.0f));
+        _material.SetInt("_SampleCount", 32);
+        _material.SetVector("_MieG", new Vector4(1.0f, 1.0f, 0.0f, 1.0f / (4.0f * Mathf.PI)));
+        _material.SetVector("_VolumetricLight", new Vector4(1.0f, 0.0f, _light.range, 1.0f));
+
+        _material.SetTexture("_CameraDepthTexture", renderer.GetVolumeLightDepthBuffer());
         
-		_material.SetTexture("_CameraDepthTexture", renderer._halfVolumeLightTexture);
-        
+        _material.SetFloat("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);            
+           
+
         if(_light.type == LightType.Point)
+        {
             SetupPointLight(renderer, viewProj);
+        }
         else if(_light.type == LightType.Spot)
+        {
             SetupSpotLight(renderer, viewProj);
+        }
     }
 
     void Update()
@@ -87,7 +89,6 @@ public class VolumetricLight : MonoBehaviour
         _commandBuffer.Clear();
     }
 
-    /// <summary>
     private void SetupPointLight(VolumetricLightRenderer renderer, Matrix4x4 viewProj)
     {
         int pass = 0;
@@ -96,15 +97,13 @@ public class VolumetricLight : MonoBehaviour
 
         _material.SetPass(pass);
 
-		Mesh mesh = VolumetricLightRenderer._pointLightMesh;
+        Mesh mesh = VolumetricLightRenderer.GetPointLightMesh();
         
         float scale = _light.range * 2.0f;
         Matrix4x4 world = Matrix4x4.TRS(transform.position, _light.transform.rotation, new Vector3(scale, scale, scale));
 
         _material.SetMatrix("_WorldViewProj", viewProj * world);
         _material.SetMatrix("_WorldView", Camera.current.worldToCameraMatrix * world);
-
-        _material.DisableKeyword("NOISE");
 
         _material.SetVector("_LightPos", new Vector4(_light.transform.position.x, _light.transform.position.y, _light.transform.position.z, 1.0f / (_light.range * _light.range)));
         _material.SetColor("_LightColor", _light.color * _light.intensity);
@@ -133,7 +132,7 @@ public class VolumetricLight : MonoBehaviour
         {
             _material.EnableKeyword("SHADOWS_CUBE");
             _commandBuffer.SetGlobalTexture("_ShadowMapTexture", BuiltinRenderTextureType.CurrentActive);
-			_commandBuffer.SetRenderTarget(renderer._halfVolumeLightTexture);
+            _commandBuffer.SetRenderTarget(renderer.GetVolumeLightBuffer());
 
             _commandBuffer.DrawMesh(mesh, world, _material, 0, pass);
 
@@ -150,7 +149,6 @@ public class VolumetricLight : MonoBehaviour
         }
     }
 
-    /// <summary>
     private void SetupSpotLight(VolumetricLightRenderer renderer, Matrix4x4 viewProj)
     {        
         int pass = 1;
@@ -159,7 +157,7 @@ public class VolumetricLight : MonoBehaviour
             pass = 3;     
         }
 
-		Mesh mesh = VolumetricLightRenderer._spotLightMesh;
+        Mesh mesh = VolumetricLightRenderer.GetSpotLightMesh();
                 
         float scale = _light.range;
         float angleScale = Mathf.Tan((_light.spotAngle + 1) * 0.5f * Mathf.Deg2Rad) * _light.range;
@@ -194,8 +192,7 @@ public class VolumetricLight : MonoBehaviour
 
         _material.EnableKeyword("SPOT");
 
-        _material.DisableKeyword("NOISE");
-
+        _material.SetTexture("_LightTexture0", _light.cookie);
 
         bool forceShadowsOff = false;
         if ((_light.transform.position - Camera.current.transform.position).magnitude >= QualitySettings.shadowDistance)
@@ -205,7 +202,10 @@ public class VolumetricLight : MonoBehaviour
         {
             clip = Matrix4x4.TRS(new Vector3(0.5f, 0.5f, 0.5f), Quaternion.identity, new Vector3(0.5f, 0.5f, 0.5f));
 
-            proj = Matrix4x4.Perspective(_light.spotAngle, 1, _light.range, _light.shadowNearPlane);
+            if(_reversedZ)
+                proj = Matrix4x4.Perspective(_light.spotAngle, 1, _light.range, _light.shadowNearPlane);
+            else
+                proj = Matrix4x4.Perspective(_light.spotAngle, 1, _light.shadowNearPlane, _light.range);
 
             Matrix4x4 m = clip * proj;
             m[0, 2] *= -1;
@@ -219,7 +219,7 @@ public class VolumetricLight : MonoBehaviour
 
             _material.EnableKeyword("SHADOWS_DEPTH");
             _commandBuffer.SetGlobalTexture("_ShadowMapTexture", BuiltinRenderTextureType.CurrentActive);
-			_commandBuffer.SetRenderTarget(renderer._halfVolumeLightTexture);
+            _commandBuffer.SetRenderTarget(renderer.GetVolumeLightBuffer());
 
             _commandBuffer.DrawMesh(mesh, world, _material, 0, pass);
 
@@ -235,9 +235,7 @@ public class VolumetricLight : MonoBehaviour
                 CustomRenderEvent(renderer, this, renderer.GlobalCommandBuffer, viewProj);
         }
     }
-		
 
-    /// <summary>
     private bool IsCameraInPointLightBounds()
     {
         float distanceSqr = (_light.transform.position - Camera.current.transform.position).sqrMagnitude;
@@ -247,7 +245,6 @@ public class VolumetricLight : MonoBehaviour
         return false;
     }
 
-    /// <summary>
     private bool IsCameraInSpotLightBounds()
     {
         // check range

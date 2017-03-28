@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using UnityEngine;
 
 public class Vamp_Player_Controller : MonoBehaviour
@@ -10,6 +11,8 @@ public class Vamp_Player_Controller : MonoBehaviour
     public float runningSpeed;
     public float jumpingHeight;
     public bool inLightTrigger;
+
+    Stopwatch sw;
 
     [SerializeField]
     States currentState;
@@ -26,6 +29,9 @@ public class Vamp_Player_Controller : MonoBehaviour
     [SerializeField]
     LayerMask obstruction;
 
+    [SerializeField]
+    Canvas PlayerUI;
+
     Rigidbody rb;
     Vector3 maxHeight;
     Vector3 groundedPosition;
@@ -37,6 +43,9 @@ public class Vamp_Player_Controller : MonoBehaviour
         currentState = States.Idle;
         rb = this.GetComponent<Rigidbody>();
         falling = false;
+        PlayerUI.transform.GetChild(0).gameObject.SetActive(false);
+        sw = new Stopwatch();
+        sw.Start();
     }
 
     // Update is called once per frame
@@ -47,6 +56,7 @@ public class Vamp_Player_Controller : MonoBehaviour
 
     void FixedUpdate()
     {
+
         float forwardMovement = Input.GetAxis("Vertical");
         float strafing = Input.GetAxis("Horizontal");
 
@@ -61,51 +71,55 @@ public class Vamp_Player_Controller : MonoBehaviour
             }
         }
 
-        //try
-        //{
-            RaycastHit interact;
-            Debug.DrawRay(this.gameObject.transform.GetChild(0).transform.position, this.gameObject.transform.GetChild(0).transform.forward * 2.5f);
-            if (Physics.Raycast(this.transform.position, this.transform.GetChild(0).transform.forward, out interact, 2.5f))
+        RaycastHit interact;
+        //UnityEngine.Debug.DrawRay(this.gameObject.transform.GetChild(0).transform.position, this.gameObject.transform.GetChild(0).transform.forward * 2.5f);
+        if (Physics.Raycast(this.transform.position, this.transform.GetChild(0).transform.forward, out interact, 2.5f))
+        {
+            if (interact.transform.gameObject != null)
             {
-                if (interact.transform.gameObject != null)
+                //UnityEngine.Debug.Log(interact.transform.tag);
+                if (interact.transform.gameObject.tag == "Battery")
                 {
-                    if (interact.transform.gameObject.tag == "Battery")
-                    {
-                        if (!holdingSomething)
-                        {
-                            if (Input.GetKeyUp(KeyCode.E))
-                            {
-                                if (interact.transform.gameObject.GetComponent<Rigidbody>().useGravity)
-                                {
-                                    interact.transform.gameObject.GetComponent<Rigidbody>().useGravity = false;
-                                    interact.transform.gameObject.GetComponent<Rigidbody>().isKinematic = true;
-                                    interact.transform.gameObject.transform.parent = this.transform;
-                                    interact.transform.gameObject.transform.position = this.transform.TransformPoint(0, 0, 2.5f);
-                                    interact.transform.gameObject.transform.rotation = Quaternion.Euler(new Vector3(0, 90, 0));
-                                    holdingSomething = true;
-                                    canDropObject = false;
-                                    StartCoroutine("CanDrop");
-                                }
-                            } 
-                        }
-                    }
-
-                    //interact.transform.gameObject.GetComponent<GlowObject>().enabled = true;
-                    else if (interact.transform.gameObject.tag == "Door")
+                    if (!holdingSomething)
                     {
                         if (Input.GetKeyUp(KeyCode.E))
                         {
-                            interact.transform.gameObject.GetComponent<DoorOpenCloseLerpScript>().MoveDoor();
+                            if (interact.transform.gameObject.GetComponent<Rigidbody>().useGravity)
+                            {
+                                interact.transform.gameObject.GetComponent<Rigidbody>().useGravity = false;
+                                interact.transform.gameObject.GetComponent<Rigidbody>().isKinematic = true;
+                                interact.transform.gameObject.transform.parent = this.transform;
+                                interact.transform.gameObject.transform.position = this.transform.TransformPoint(0, 0, 2.5f);
+                                interact.transform.gameObject.transform.rotation = Quaternion.Euler(new Vector3(0, 90, 0));
+                                holdingSomething = true;
+                                canDropObject = false;
+                                StartCoroutine("CanDrop");
+                            }
                         }
                     }
                 }
-                //interact.transform.gameObject.GetComponent<GlowObject>().enabled = false;
-            }
-        //}
-        //catch
-        //{
 
-        //}
+                //interact.transform.gameObject.GetComponent<GlowObject>().enabled = true;
+                else if (interact.transform.gameObject.tag == "Door")
+                {
+                    if (Input.GetKeyUp(KeyCode.E))
+                    {
+                        interact.transform.gameObject.GetComponent<DoorOpenCloseLerpScript>().MoveDoor();
+                    }
+                }
+
+                if (interact.transform.gameObject.tag == "Socket")
+                {
+                    PlayerUI.transform.GetChild(0).gameObject.SetActive(true);
+                }
+                else
+                {
+                    PlayerUI.transform.GetChild(0).gameObject.SetActive(false);
+                }
+            }
+
+            //interact.transform.gameObject.GetComponent<GlowObject>().enabled = false;
+        }
 
 
 

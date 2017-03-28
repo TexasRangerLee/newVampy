@@ -36,26 +36,29 @@ public class Player_in_Light : MonoBehaviour
 
     public void OnTriggerStay(Collider other)
     {
-        if (other.gameObject.tag == "Player")
+        if ((Time.time % 1.0) == 0)
         {
-            Ray inLight = new Ray(this.transform.position, -((this.transform.position - other.gameObject.transform.position) / Vector3.Distance(this.transform.position, other.gameObject.transform.position)));
-            Debug.DrawLine(this.transform.position, other.gameObject.transform.position, Color.green);
-            Debug.DrawRay(this.transform.position, -((this.transform.position - other.gameObject.transform.position) / Vector3.Distance(this.transform.position, other.gameObject.transform.position)), Color.red);
-            RaycastHit lightCheck;
-            //LayerMask obstruction = LayerMask.GetMask("Obstruction");
-            if (Physics.Raycast(inLight, out lightCheck, obstruction))
+            if (other.gameObject.tag == "Player")
             {
-                Debug.Log(lightCheck.transform.gameObject.tag);
-                if (lightCheck.transform.gameObject.tag != "Player")
+                Ray inLight = new Ray(this.transform.position, -((this.transform.position - other.gameObject.transform.position) / Vector3.Distance(this.transform.position, other.gameObject.transform.position)));
+                Debug.DrawLine(this.transform.position, other.gameObject.transform.position, Color.green);
+                Debug.DrawRay(this.transform.position, -((this.transform.position - other.gameObject.transform.position) / Vector3.Distance(this.transform.position, other.gameObject.transform.position)), Color.red);
+                RaycastHit lightCheck;
+                //LayerMask obstruction = LayerMask.GetMask("Obstruction");
+                if (Physics.Raycast(inLight, out lightCheck, obstruction))
                 {
-                    Debug.Log("Light is being blocked!!!");
+                    Debug.Log(lightCheck.transform.gameObject.tag);
+                    if (lightCheck.transform.gameObject.tag != "Player")
+                    {
+                        Debug.Log("Light is being blocked!!!");
+                    }
+                    else
+                    {
+                        Debug.Log("OI HE IN THE LIGHT!!!!");
+                    }
+                    //Call Some Function to be written in about 5 minutes
                 }
-                else
-                {
-                    Debug.Log("OI HE IN THE LIGHT!!!!");
-                }
-                //Call Some Function to be written in about 5 minutes
-            }
+            } 
         }
     }
 

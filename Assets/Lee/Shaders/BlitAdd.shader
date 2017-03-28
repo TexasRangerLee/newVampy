@@ -1,4 +1,4 @@
-Shader "Blit" 
+Shader "Hidden/blit" 
 {
 	Properties{ _MainTex("Texture", any) = "" {} }
 	SubShader
