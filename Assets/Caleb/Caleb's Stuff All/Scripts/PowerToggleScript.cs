@@ -11,7 +11,7 @@ public class PowerToggleScript : MonoBehaviour
 
     //variables to handle powered objects
     public bool hasPower;
-    public bool hasTarget;
+    public bool hasTarget; //MUST BE SET IN EDITOR
     public GameObject target;
     //different bools depending on object and desired outcome
     //MUST BE SET IN EDITOR
@@ -28,6 +28,10 @@ public class PowerToggleScript : MonoBehaviour
         rend.enabled = true;
 
         hasTarget = (target != null);
+        if (hasTarget)
+        {
+            script = target.GetComponent<PoweredDoorScript>();
+        }
     }
 
     // Update is called once per frame
@@ -44,7 +48,6 @@ public class PowerToggleScript : MonoBehaviour
         {
             rend.material = unpowered;
             hasPower = false;
-
         }
         else
         {
@@ -73,13 +76,13 @@ public class PowerToggleScript : MonoBehaviour
         }
         else
         {
-            Debug.Log("WIRE HAS UNDEFINED TARGET");
         }
     }
 
     public void ToggleDoor()
     {
         script.MoveDoor();
+        //script.doorHasPower = !script.doorHasPower;
     }
 
     public void RotateLight()

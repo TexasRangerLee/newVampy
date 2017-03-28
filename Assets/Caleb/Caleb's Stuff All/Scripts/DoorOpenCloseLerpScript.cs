@@ -188,12 +188,10 @@ public class DoorOpenCloseLerpScript : MonoBehaviour
     //Output:   None, calls DoSomeLerping, passing it the proper value to close the door
     public void CloseDoor()
     {
-        Debug.Log("MADE IT INTO CLOSEDOOR()");
         if (lastWasClockwise && readyToTurn)
         {
             DoSomeLerping(counterclockwise);
             isOpen = false;
-            Debug.Log("I SET THE isOpen TO FALSE!!!");
         }
         else if (!lastWasClockwise && readyToTurn) //last was counterclockwise
         {

@@ -41,7 +41,6 @@ public class WireControllerScript : MonoBehaviour
             if (child.transform.GetComponentInChildren<BatterySocketScript>().isPowered == true)
             {
                 systemActive = true;
-                Debug.Log("A BATTERY IS ON");
                 break;
             }
         }
@@ -52,7 +51,6 @@ public class WireControllerScript : MonoBehaviour
         foreach (PowerToggleScript script in wireScripts)
         {
             script.changePowerState(powered);
-            Debug.Log("POWERING THEM ON!");
         }
     }
 }

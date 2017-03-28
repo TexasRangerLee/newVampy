@@ -4,11 +4,18 @@ using UnityEngine;
 
 public class PoweredDoorScript : MonoBehaviour
 {
+    //variables used for lighting up door markers for powered doors
+    //MUST BE SET IN EDITOR
+    public GameObject lightningA;
+    public GameObject lightningB;
+
+    public PowerToggleScript scriptA;
+    public PowerToggleScript scriptB;
+
     //powered variant variables
     public GameObject connectedWire;  //MUST BE SET IN EDITOR
-    public bool hasPower;
+    public bool doorHasPower;
     public PowerToggleScript wireScript;
-
 
     //reference to object this is on
     public GameObject self;
@@ -16,10 +23,6 @@ public class PoweredDoorScript : MonoBehaviour
     //set up start/end rotations for lerping
     Quaternion startRotation;
     Quaternion endRotation;
-
-    //set up increment value for lerping
-    //NO LONGER IN USE
-    //public float lerpRate;
 
     //boolean to turn on/off lerping and prevent multiple lerp calls
     public bool readyToTurn;
@@ -48,10 +51,6 @@ public class PoweredDoorScript : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        //set lerprate to (hopefully) work over 1 second
-        //NO LONGER IN USE
-        //lerpRate = 1.00f / 60.00f;
-
         //make reference to attached object
         self = this.gameObject;
 
@@ -67,6 +66,18 @@ public class PoweredDoorScript : MonoBehaviour
 
         //total delta time should start as 0
         totalDeltaTime = 0.00f;
+
+        //set scripts if items are present
+        if (connectedWire != null)
+        {
+            wireScript = connectedWire.GetComponent<PowerToggleScript>();
+        }
+
+        if (lightningA != null)
+        {
+            scriptA = lightningA.GetComponent<PowerToggleScript>();
+            scriptB = lightningB.GetComponent<PowerToggleScript>();
+        }
     }
 
     // Update is called once per frame
@@ -104,12 +115,6 @@ public class PoweredDoorScript : MonoBehaviour
                 totalDeltaTime = 0;
                 startRotation = self.transform.rotation;
             }
-        }
-        //catch on powered doors; door will move to end position uninterrupted
-        //then check to make sure it matches power state; if not, it moves back uninterrupted
-        if (wireScript.hasPower != hasPower)
-        {
-            MoveDoor();
         }
 
         //OLD FRAME DEPENDENT CODE, NO LONGER IN USE
@@ -200,17 +205,34 @@ public class PoweredDoorScript : MonoBehaviour
     //Output:   None, calls DoSomeLerping, passing it the proper value to close the door
     public void CloseDoor()
     {
-        Debug.Log("MADE IT INTO CLOSEDOOR()");
         if (lastWasClockwise && readyToTurn)
         {
             DoSomeLerping(counterclockwise);
             isOpen = false;
-            Debug.Log("I SET THE isOpen TO FALSE!!!");
         }
         else if (!lastWasClockwise && readyToTurn) //last was counterclockwise
         {
             DoSomeLerping(clockwise);
             isOpen = false;
+        }
+    }
+
+    public void LateUpdate()
+    {
+        doorHasPower = isOpen;
+        scriptA.changePowerState(doorHasPower);
+        scriptB.changePowerState(doorHasPower);
+
+        //catch on powered doors; door will move to end position uninterrupted
+        //then check to make sure it matches power state; if not, it moves back uninterrupted
+        if (connectedWire != null)
+        {
+            Debug.Log(wireScript.hasPower + " " + doorHasPower);
+            if (wireScript.hasPower != doorHasPower)
+            {
+                MoveDoor();
+                Debug.Log("LATE MOVE DOOR");
+            }
         }
     }
 }
