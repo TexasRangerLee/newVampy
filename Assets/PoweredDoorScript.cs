@@ -227,11 +227,9 @@ public class PoweredDoorScript : MonoBehaviour
         //then check to make sure it matches power state; if not, it moves back uninterrupted
         if (connectedWire != null)
         {
-            Debug.Log(wireScript.hasPower + " " + doorHasPower);
             if (wireScript.hasPower != doorHasPower)
             {
                 MoveDoor();
-                Debug.Log("LATE MOVE DOOR");
             }
         }
     }

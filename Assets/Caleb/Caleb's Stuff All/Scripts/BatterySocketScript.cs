@@ -13,7 +13,7 @@ public class BatterySocketScript : MonoBehaviour
     void Start()
     {
         wireController = this.transform.parent.parent.gameObject;
-        //script = wireController.GetComponent<WireControllerScript>();
+        script = wireController.GetComponent<WireControllerScript>();
     }
 
     // Update is called once per frame
@@ -29,7 +29,7 @@ public class BatterySocketScript : MonoBehaviour
         if (other.CompareTag("Battery"))
         {
             isPowered = true;
-            //script.evaluateStatus();
+            script.evaluateStatus();
         }
     }
 
@@ -40,7 +40,7 @@ public class BatterySocketScript : MonoBehaviour
         if (other.CompareTag("Battery"))
         {
             isPowered = false;
-            //script.evaluateStatus();
+            script.evaluateStatus();
         }
     }
 }
