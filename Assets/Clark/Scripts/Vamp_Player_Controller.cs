@@ -43,7 +43,7 @@ public class Vamp_Player_Controller : MonoBehaviour
         currentState = States.Idle;
         rb = this.GetComponent<Rigidbody>();
         falling = false;
-        PlayerUI.transform.GetChild(0).gameObject.SetActive(false);
+        //PlayerUI.transform.GetChild(0).gameObject.SetActive(false);
         sw = new Stopwatch();
         sw.Start();
     }
@@ -110,11 +110,11 @@ public class Vamp_Player_Controller : MonoBehaviour
 
                 if (interact.transform.gameObject.tag == "Socket")
                 {
-                    PlayerUI.transform.GetChild(0).gameObject.SetActive(true);
+                    //PlayerUI.transform.GetChild(0).gameObject.SetActive(true);
                 }
                 else
                 {
-                    PlayerUI.transform.GetChild(0).gameObject.SetActive(false);
+                    //PlayerUI.transform.GetChild(0).gameObject.SetActive(false);
                 }
             }
 

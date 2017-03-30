@@ -18,8 +18,10 @@ public class PowerToggleScript : MonoBehaviour
     public bool isDoor;
     public bool turnLight;
     public bool toggleLight;
-    public PoweredDoorScript script;
-    //insert script for light script once finalized
+    public PoweredDoorScript doorScript;
+
+    public GameObject lightIndicator;
+    public PowerToggleScript indicatorScript;
 
     // Use this for initialization
     void Start()
@@ -28,9 +30,16 @@ public class PowerToggleScript : MonoBehaviour
         rend.enabled = true;
 
         hasTarget = (target != null);
-        if (hasTarget)
+        if (hasTarget&&isDoor)
         {
-            script = target.GetComponent<PoweredDoorScript>();
+            doorScript = target.GetComponent<PoweredDoorScript>();
+        }
+
+        if (hasTarget && toggleLight) //if a wire has a toggle light, sets its state to the wire's
+        {                             //state on start
+            target.SetActive(hasPower);
+            indicatorScript = lightIndicator.GetComponent<PowerToggleScript>();
+            indicatorScript.changePowerState(hasPower);
         }
     }
 
@@ -48,6 +57,7 @@ public class PowerToggleScript : MonoBehaviour
         {
             rend.material = unpowered;
             hasPower = false;
+
         }
         else
         {
@@ -81,18 +91,18 @@ public class PowerToggleScript : MonoBehaviour
 
     public void ToggleDoor()
     {
-        script.MoveDoor();
-        //script.doorHasPower = !script.doorHasPower;
+        doorScript.MoveDoor();
     }
 
     public void RotateLight()
     {
-        //TODO
+        //TODO, might not do?
     }
 
     public void ToggleLight()
     {
-        //TODO
+        target.SetActive(hasPower);
+        indicatorScript.changePowerState(this.hasPower);
     }
 
 }
