@@ -107,6 +107,13 @@ public class Vamp_Player_Controller : MonoBehaviour
                         interact.transform.gameObject.GetComponent<DoorOpenCloseLerpScript>().MoveDoor();
                     }
                 }
+                else if (interact.transform.gameObject.tag=="Left Shutter"|| interact.transform.gameObject.tag == "Right Tag")
+                {
+                    if (Input.GetKeyUp(KeyCode.E))
+                    {
+                        interact.transform.gameObject.GetComponent<OldShuttersOpenCloseLerpScript>().ToggleShutters(); 
+                    }
+                }
 
                 if (interact.transform.gameObject.tag == "Socket")
                 {
