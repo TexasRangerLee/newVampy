@@ -2,18 +2,27 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DoorOpenCloseLerpScript : MonoBehaviour
+public class PoweredDoorScript : MonoBehaviour
 {
+    //variables used for lighting up door markers for powered doors
+    //MUST BE SET IN EDITOR
+    public GameObject lightningA;
+    public GameObject lightningB;
+
+    public PowerToggleScript scriptA;
+    public PowerToggleScript scriptB;
+
+    //powered variant variables
+    public GameObject connectedWire;  //MUST BE SET IN EDITOR
+    public bool doorHasPower;
+    public PowerToggleScript wireScript;
+
     //reference to object this is on
     public GameObject self;
 
     //set up start/end rotations for lerping
     Quaternion startRotation;
     Quaternion endRotation;
-
-    //set up increment value for lerping
-    //NO LONGER IN USE
-    //public float lerpRate;
 
     //boolean to turn on/off lerping and prevent multiple lerp calls
     public bool readyToTurn;
@@ -42,10 +51,6 @@ public class DoorOpenCloseLerpScript : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        //set lerprate to (hopefully) work over 1 second
-        //NO LONGER IN USE
-        //lerpRate = 1.00f / 60.00f;
-
         //make reference to attached object
         self = this.gameObject;
 
@@ -61,17 +66,29 @@ public class DoorOpenCloseLerpScript : MonoBehaviour
 
         //total delta time should start as 0
         totalDeltaTime = 0.00f;
+
+        //set scripts if items are present
+        if (connectedWire != null)
+        {
+            wireScript = connectedWire.GetComponent<PowerToggleScript>();
+        }
+
+        if (lightningA != null)
+        {
+            scriptA = lightningA.GetComponent<PowerToggleScript>();
+            scriptB = lightningB.GetComponent<PowerToggleScript>();
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
         //Code below for triggering lerp on keycode; deprecated with new function system below
-        if (Input.GetKeyDown(KeyCode.K) && readyToTurn)
-        {
-            //Old code to move door on keypress
-            MoveDoor();
-        }
+        //if (Input.GetKeyDown(KeyCode.K) && readyToTurn)
+        //{
+        //    //Old code to move door on keypress
+        //    MoveDoor();
+        //}
 
         //NEW FRAME INDEPENDENT LERPING STUFF BELOW
 
@@ -197,6 +214,23 @@ public class DoorOpenCloseLerpScript : MonoBehaviour
         {
             DoSomeLerping(clockwise);
             isOpen = false;
+        }
+    }
+
+    public void LateUpdate()
+    {
+        doorHasPower = isOpen;
+        scriptA.changePowerState(doorHasPower);
+        scriptB.changePowerState(doorHasPower);
+
+        //catch on powered doors; door will move to end position uninterrupted
+        //then check to make sure it matches power state; if not, it moves back uninterrupted
+        if (connectedWire != null)
+        {
+            if (wireScript.hasPower != doorHasPower)
+            {
+                MoveDoor();
+            }
         }
     }
 }

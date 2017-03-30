@@ -2,10 +2,36 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DoorOpenCloseLerpScript : MonoBehaviour
+public class PoweredShutterScript : MonoBehaviour
 {
-    //reference to object this is on
+    public GameObject lightningA;
+    public GameObject lightningB;
+
+    public PowerToggleScript scriptA;
+    public PowerToggleScript scriptB;
+
+    public GameObject connectedWire;  //MUST BE SET IN EDITOR
+
+    public bool shutterHasPower;
+    public PowerToggleScript wireScript;
+
+    //reference to object this is on; kept so both shutters
+    //can start up properly
     public GameObject self;
+
+    //reference to entire shutter object (parent)
+    public GameObject parent;
+
+    //both shutters are referenced so i don't have to figure out which
+    //one is which and have them call the other only if this and that and
+    //all that bullshit
+
+    //reference to left shutter
+    public GameObject left;
+    public PoweredShutterScript leftScript;
+    //reference to other shutter
+    public GameObject right;
+    public PoweredShutterScript rightScript;
 
     //set up start/end rotations for lerping
     Quaternion startRotation;
@@ -22,9 +48,9 @@ public class DoorOpenCloseLerpScript : MonoBehaviour
     public float totalDeltaTime;
 
 
-    //DOOR STUFF BELOW
+    //DOOR STUFF BELOW (totally ripped from door)
 
-    //boolean to know if door is open/closed
+    //boolean to know if shutter is open/closed
     //MUST BE SET IN EDITOR TO BE CONSIDERED OPEN AT START
     public bool isOpen;
 
@@ -33,21 +59,27 @@ public class DoorOpenCloseLerpScript : MonoBehaviour
     Vector3 clockwise;
     Vector3 counterclockwise;
 
-    //bool to know which way to turn the door on close
-    //if door starts open, MUST BE SET IN EDITOR
-    //if door was opened clockwise, is true; else is false
-    public bool lastWasClockwise;
-
 
     // Use this for initialization
     void Start()
     {
         //set lerprate to (hopefully) work over 1 second
-        //NO LONGER IN USE
+        //NO LONGER IN USe
         //lerpRate = 1.00f / 60.00f;
 
-        //make reference to attached object
+        //make reference to self
         self = this.gameObject;
+
+        //make reference to parent
+        parent = this.transform.parent.gameObject;
+
+        //make reference to both shutters (MUST RESPECT SHUTTER ORDER; RIGHT IS ALWAYS 0,
+        //LEFT IS ALWAYS 1, DO NOT SCREW THIS UP!
+        left = parent.transform.GetChild(1).gameObject;
+        leftScript = left.GetComponent<PoweredShutterScript>();
+
+        right = parent.transform.GetChild(0).gameObject;
+        rightScript = right.GetComponent<PoweredShutterScript>();
 
         //prop should start off ready to turn
         readyToTurn = true;
@@ -55,12 +87,36 @@ public class DoorOpenCloseLerpScript : MonoBehaviour
         //set starting rotation
         startRotation = self.transform.rotation;
 
+        //if isOpen is set to true in editor, this ensures the decision is respected
+        //if not, then respects that as well; could probably use less code, but I'd rather be certain
+        if (isOpen)
+        {
+            isOpen = true;
+        }
+        else
+        {
+            isOpen = false;
+        }
+
         //initialize turning vectors to turn 90 degrees either way
         clockwise = new Vector3(0, 90f, 0);
         counterclockwise = new Vector3(0, -90f, 0);
 
         //total delta time should start as 0
         totalDeltaTime = 0.00f;
+
+        //set scripts if items are present
+        if (connectedWire != null)
+        {
+            wireScript = connectedWire.GetComponent<PowerToggleScript>();
+        }
+
+        //stuff for powered shutters
+        if (lightningA != null)
+        {
+            scriptA = lightningA.GetComponent<PowerToggleScript>();
+            scriptB = lightningB.GetComponent<PowerToggleScript>();
+        }
     }
 
     // Update is called once per frame
@@ -70,12 +126,12 @@ public class DoorOpenCloseLerpScript : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.K) && readyToTurn)
         {
             //Old code to move door on keypress
-            MoveDoor();
+            ToggleShutters();
         }
 
         //NEW FRAME INDEPENDENT LERPING STUFF BELOW
 
-        //if the door is trying to move, increases total delta time by delta time and lerps to
+        //if the prop is trying to turn, increases total delta time by delta time and lerps to
         //new location
         if (readyToTurn == false)
         {
@@ -100,7 +156,7 @@ public class DoorOpenCloseLerpScript : MonoBehaviour
             }
         }
 
-        //OLD FRAME DEPENDENT CODE, NO LONGER IN USE
+        //OLD FRAME DEPENDENT STUFF BELOW; NO LONGER IN USE
         //lerp if statement (loops on update), SCREW COROUTINES; if it's not ready to turn, it's trying to turn
         //if (readyToTurn == false)
         //{
@@ -125,7 +181,6 @@ public class DoorOpenCloseLerpScript : MonoBehaviour
         //        startRotation = self.transform.rotation;
         //    }
         //}
-
     }
 
     //Purpose:  Set up lerping parameters, should be called from outside context
@@ -147,56 +202,65 @@ public class DoorOpenCloseLerpScript : MonoBehaviour
         }
     }
 
-    //Purpose:  Call OpenDoor or CloseDoor, as appropriate
+    //Purpose:  Call OpenShutters or CloseShutters, as appropriate
     //Input:    None
-    //Output:   None, calls open/close door functions
+    //Output:   None, calls open/close shutters functions
     //Extra:    Relies on isOpen bool to know which function to call
-    public void MoveDoor()
+    public void ToggleShutters()
     {
         if (isOpen) //door is open
         {
-            CloseDoor();
+            CloseShutters();
         }
-        else //door is closed
+        else if (!isOpen) //door is closed
         {
-            OpenDoor();
-        }
-    }
-
-    //Purpose:  Open doors, depending on which side the player is on
-    //Input:    None YET, NOT FULLY IMPLEMENTED
-    //Output:   None, calls DoSomeLerping, passing it the proper value to open away from the player
-    //Extra:    NOT FULLY IMPLEMENTED
-    public void OpenDoor()
-    {
-        if (true && readyToTurn) //player needs to open door clockwise (hinge is to the right)
-        {
-            DoSomeLerping(clockwise);
-            isOpen = true;
-            lastWasClockwise = true;
-        }
-        else if (false && readyToTurn) //player needs to open door counterclockwise (hinge is to the left)
-        {
-            DoSomeLerping(counterclockwise);
-            isOpen = true;
-            lastWasClockwise = false;
+            OpenShutters();
         }
     }
 
-    //Purpose:  Close doors, depending on how it was last opened
+    //Purpose:  Open shutters, they only open away from the affixed window
     //Input:    None YET, NOT FULLY IMPLEMENTED
-    //Output:   None, calls DoSomeLerping, passing it the proper value to close the door
-    public void CloseDoor()
+    //Output:   None, calls DoSomeLerping on both shutters to open them
+    public void OpenShutters()
     {
-        if (lastWasClockwise && readyToTurn)
+        if (readyToTurn)
         {
-            DoSomeLerping(counterclockwise);
-            isOpen = false;
+            leftScript.DoSomeLerping(counterclockwise);
+            rightScript.DoSomeLerping(clockwise);
+            leftScript.isOpen = true;
+            rightScript.isOpen=true;
         }
-        else if (!lastWasClockwise && readyToTurn) //last was counterclockwise
+    }
+
+    //Purpose:  Close shutters
+    //Input:    None
+    //Output:   None, calls DoSomeLerping on both scripts to close shutters
+    public void CloseShutters()
+    {
+        if (readyToTurn)
         {
-            DoSomeLerping(clockwise);
-            isOpen = false;
+            leftScript.DoSomeLerping(clockwise);
+            rightScript.DoSomeLerping(counterclockwise);
+            leftScript.isOpen = false;
+            rightScript.isOpen = false;
+        }
+    }
+
+    public void LateUpdate()
+    {
+        shutterHasPower = isOpen;
+        scriptA.changePowerState(shutterHasPower);
+        scriptB.changePowerState(shutterHasPower);
+
+        //catch on powered doors; door will move to end position uninterrupted
+        //then check to make sure it matches power state; if not, it moves back uninterrupted
+        if (connectedWire != null)
+        {
+            if (wireScript.hasPower != shutterHasPower)
+            {
+                ToggleShutters();
+            }
         }
     }
 }
+
