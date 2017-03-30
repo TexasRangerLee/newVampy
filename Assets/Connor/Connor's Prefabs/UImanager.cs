@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class UImanager : MonoBehaviour {
     public GameObject creditScreen;
@@ -27,5 +28,11 @@ public class UImanager : MonoBehaviour {
     {
         Debug.Log("Quit");
         Application.Quit();
+    }
+
+    public void NewGame()
+    {
+        Debug.Log("Starting new game.");
+        SceneManager.LoadScene("fuckyouunity");
     }
 }
