@@ -55,6 +55,7 @@ public class Player_in_Light : MonoBehaviour
                     else
                     {
                         Debug.Log("OI HE IN THE LIGHT!!!!");
+                        Player.GetComponent<Vamp_Player_Controller>().TakeDamage();
                     }
                     //Call Some Function to be written in about 5 minutes
                 }

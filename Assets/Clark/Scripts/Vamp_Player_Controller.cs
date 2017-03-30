@@ -12,7 +12,8 @@ public class Vamp_Player_Controller : MonoBehaviour
     public float jumpingHeight;
     public bool inLightTrigger;
 
-    Stopwatch sw;
+    public float maxHealth = 100;
+    public float currentHealth;
 
     [SerializeField]
     States currentState;
@@ -43,15 +44,18 @@ public class Vamp_Player_Controller : MonoBehaviour
         currentState = States.Idle;
         rb = this.GetComponent<Rigidbody>();
         falling = false;
+        currentHealth = maxHealth;
         //PlayerUI.transform.GetChild(0).gameObject.SetActive(false);
-        sw = new Stopwatch();
-        sw.Start();
     }
 
     // Update is called once per frame
     void Update()
     {
         //Debug.Log(inLightTrigger + " from VPC.");
+        if (!inLightTrigger && currentHealth != 100 && currentHealth != 0)
+        {
+            currentHealth += 5;
+        }
     }
 
     void FixedUpdate()
@@ -73,7 +77,7 @@ public class Vamp_Player_Controller : MonoBehaviour
 
         RaycastHit interact;
         //UnityEngine.Debug.DrawRay(this.gameObject.transform.GetChild(0).transform.position, this.gameObject.transform.GetChild(0).transform.forward * 2.5f);
-        if (Physics.Raycast(this.transform.position, this.transform.GetChild(0).transform.forward, out interact, 2.5f))
+        if (Physics.Raycast(this.transform.position, this.transform.GetChild(0).transform.forward, out interact, 4f))
         {
             if (interact.transform.gameObject != null)
             {
@@ -285,5 +289,10 @@ public class Vamp_Player_Controller : MonoBehaviour
         canDropObject = false;
 
         yield return new WaitForSeconds(0.1f);
+    }
+
+    public void TakeDamage()
+    {
+        currentHealth -= 25;
     }
 }
