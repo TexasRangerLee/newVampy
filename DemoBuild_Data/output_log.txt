@@ -1,0 +1,70 @@
+Initialize engine version: 5.5.1f1 (88d00a7498cd)
+GfxDevice: creating device client; threaded=1
+Direct3D:
+    Version:  Direct3D 11.0 [level 11.0]
+    Renderer: NVIDIA Quadro 2000 (ID=0xdd8)
+    Vendor:   NVIDIA
+    VRAM:     977 MB
+    Driver:   9.18.13.3250
+Begin MonoManager ReloadAssembly
+Platform assembly: C:\Users\cjg7324\Documents\GitHub\cmps_427_vamp\DemoBuild_Data\Managed\UnityEngine.dll (this message is harmless)
+Loading C:\Users\cjg7324\Documents\GitHub\cmps_427_vamp\DemoBuild_Data\Managed\UnityEngine.dll into Unity Child Domain
+Platform assembly: C:\Users\cjg7324\Documents\GitHub\cmps_427_vamp\DemoBuild_Data\Managed\Assembly-CSharp.dll (this message is harmless)
+Loading C:\Users\cjg7324\Documents\GitHub\cmps_427_vamp\DemoBuild_Data\Managed\Assembly-CSharp.dll into Unity Child Domain
+Platform assembly: C:\Users\cjg7324\Documents\GitHub\cmps_427_vamp\DemoBuild_Data\Managed\UnityEngine.UI.dll (this message is harmless)
+Loading C:\Users\cjg7324\Documents\GitHub\cmps_427_vamp\DemoBuild_Data\Managed\UnityEngine.UI.dll into Unity Child Domain
+Platform assembly: C:\Users\cjg7324\Documents\GitHub\cmps_427_vamp\DemoBuild_Data\Managed\UnityEngine.Networking.dll (this message is harmless)
+Loading C:\Users\cjg7324\Documents\GitHub\cmps_427_vamp\DemoBuild_Data\Managed\UnityEngine.Networking.dll into Unity Child Domain
+Platform assembly: C:\Users\cjg7324\Documents\GitHub\cmps_427_vamp\DemoBuild_Data\Managed\UnityEngine.PlaymodeTestsRunner.dll (this message is harmless)
+Loading C:\Users\cjg7324\Documents\GitHub\cmps_427_vamp\DemoBuild_Data\Managed\UnityEngine.PlaymodeTestsRunner.dll into Unity Child Domain
+Platform assembly: C:\Users\cjg7324\Documents\GitHub\cmps_427_vamp\DemoBuild_Data\Managed\UnityEngine.Analytics.dll (this message is harmless)
+Loading C:\Users\cjg7324\Documents\GitHub\cmps_427_vamp\DemoBuild_Data\Managed\UnityEngine.Analytics.dll into Unity Child Domain
+- Completed reload, in  0.039 seconds
+Platform assembly: C:\Users\cjg7324\Documents\GitHub\cmps_427_vamp\DemoBuild_Data\Managed\System.Core.dll (this message is harmless)
+Platform assembly: C:\Users\cjg7324\Documents\GitHub\cmps_427_vamp\DemoBuild_Data\Managed\System.dll (this message is harmless)
+desktop: 1920x1200 59Hz; virtual: 3120x1920 at 0,-435
+<RI> Initializing input.
+<RI> Input initialized.
+<RI> Initialized touch support.
+UnloadTime: 2.600748 ms
+Setting up 8 worker threads for Enlighten.
+  Thread -> id: 15b8 -> priority: 1 
+  Thread -> id: 1c2c -> priority: 1 
+  Thread -> id: 1b68 -> priority: 1 
+  Thread -> id: 13fc -> priority: 1 
+  Thread -> id: 2780 -> priority: 1 
+  Thread -> id: 2410 -> priority: 1 
+  Thread -> id: 1238 -> priority: 1 
+  Thread -> id: 1ec4 -> priority: 1 
+In credits screen
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+In credits screen
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+In credits screen
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+Starting new game.
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+Unloading 5 Unused Serialized files (Serialized files now loaded: 0)
+UnloadTime: 3.622058 ms
+
+Unloading 34 unused Assets to reduce memory usage. Loaded Objects now: 3377.
+Total: 1.399810 ms (FindLiveObjects: 0.162092 ms CreateObjectMapping: 0.061158 ms MarkObjects: 0.379783 ms  DeleteObjects: 0.795492 ms)
+
+Unloading 3 Unused Serialized files (Serialized files now loaded: 0)
+UnloadTime: 6.993922 ms
+
+Unloading 85 unused Assets to reduce memory usage. Loaded Objects now: 388.
+Total: 3.905185 ms (FindLiveObjects: 0.061586 ms CreateObjectMapping: 0.050466 ms MarkObjects: 0.474301 ms  DeleteObjects: 3.315836 ms)
+
+Quit
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
