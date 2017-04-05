@@ -82,7 +82,7 @@ public class Vamp_Player_Controller : MonoBehaviour
             if (interact.transform.gameObject != null)
             {
                 //UnityEngine.Debug.Log(interact.transform.tag);
-                if (interact.transform.gameObject.tag == "Battery")
+                if (interact.transform.gameObject.tag == "Battery" || interact.transform.gameObject.tag == "EGG")
                 {
                     if (!holdingSomething)
                     {
@@ -111,11 +111,11 @@ public class Vamp_Player_Controller : MonoBehaviour
                         interact.transform.gameObject.GetComponent<DoorOpenCloseLerpScript>().MoveDoor();
                     }
                 }
-                else if (interact.transform.gameObject.tag=="Left Shutter"|| interact.transform.gameObject.tag == "Right Tag")
+                else if (interact.transform.gameObject.tag == "Left Shutter" || interact.transform.gameObject.tag == "Right Tag")
                 {
                     if (Input.GetKeyUp(KeyCode.E))
                     {
-                        interact.transform.gameObject.GetComponent<OldShuttersOpenCloseLerpScript>().ToggleShutters(); 
+                        interact.transform.gameObject.GetComponent<OldShuttersOpenCloseLerpScript>().ToggleShutters();
                     }
                 }
 
@@ -240,7 +240,7 @@ public class Vamp_Player_Controller : MonoBehaviour
 
     public void OnCollisionStay(Collision other)
     {
-        if (other.gameObject.tag != "Something")
+        if (other.gameObject.tag == "Jumpy" || other.gameObject.tag == "EGG" || other.gameObject.tag == "Battery" || other.gameObject.tag == "Socket")
         {
             grounded = true;
         }
