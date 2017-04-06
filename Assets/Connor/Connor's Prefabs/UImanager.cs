@@ -7,6 +7,7 @@ using UnityEngine.SceneManagement;
 public class UImanager : MonoBehaviour {
     public GameObject creditScreen;
     private GameObject canvas;
+    public GameObject OScreen;
 	// Use this for initialization
 	void Start () {
         canvas = GameObject.FindGameObjectWithTag("MainCanvas");
@@ -34,5 +35,11 @@ public class UImanager : MonoBehaviour {
     {
         Debug.Log("Starting new game.");
         SceneManager.LoadScene("fuckyouunity");
+    }
+
+    public void Options()
+    {
+        GameObject OpScreen = Instantiate(OScreen, canvas.transform, false);
+        OpScreen.gameObject.transform.SetParent(canvas.transform);
     }
 }
