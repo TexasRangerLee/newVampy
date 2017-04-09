@@ -7,7 +7,7 @@ public class BatterySocketScript : MonoBehaviour
 
     public bool isPowered;
     GameObject wireController;
-    WireControllerScript script;
+    public WireControllerScript script;
 
     // Use this for initialization
     void Start()
