@@ -5,6 +5,7 @@ using UnityEngine;
 public class DronePatrol : MonoBehaviour {
     public Transform[] points;
     public float speed;
+    [SerializeField]
     private Vector3 target;
     private int count = 0;
     public enum state { Patrol, Alert};

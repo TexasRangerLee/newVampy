@@ -31,6 +31,9 @@ public class Vamp_Player_Controller : MonoBehaviour
     LayerMask obstruction;
 
     [SerializeField]
+    public List<GameObject> LevelLights;
+
+    [SerializeField]
     Canvas PlayerUI;
 
     Rigidbody rb;
@@ -41,6 +44,13 @@ public class Vamp_Player_Controller : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+        LevelLights = new List<GameObject>();
+        GameObject[] tempLights = GameObject.FindGameObjectsWithTag("LightSource");
+        foreach (GameObject go in tempLights)
+        {
+            LevelLights.Add(go);
+        }
+
         currentState = States.Idle;
         rb = this.GetComponent<Rigidbody>();
         falling = false;
